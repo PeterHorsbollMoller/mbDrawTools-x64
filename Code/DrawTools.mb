@@ -1,0 +1,1034 @@
+'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Pitney Bowes Business Insight
+'** 	Program:	DrawTools
+'** 	Modul:	DrawTools.mb
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Enums.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\MAPPERLib.def"
+Include "Library\RIBBONLib.def"
+Include "Library\TABLELib.def"
+
+Include "DrawTools.def"
+
+Dim	msIconsFile As String
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'	nButtonPadID	ID of buttonpad to add the tools to
+'	sButtonPadName	Name of button to add the tools to
+'				If ID = 0 then the name will be used, otherwise the ID will used
+'**********************************************************************************************''
+Sub DTAddToolsToButtonPad(ByVal nButtonPadID As Integer, ByVal sButtonPadName As String)
+
+OnError GoTo ErrorOccured
+
+	If nButtonPadID <> 0 Then
+		Alter ButtonPad ID nButtonPadID Add
+			Separator
+			ToolButton
+				Calling DTRegionAdd
+				Icon 17	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POLYGON
+				HelpMsg "Add extra region to selected region\nAdd to selected region"
+				ModifierKeys On
+			ToolButton
+				Calling DTRegionRemove
+				Icon 19	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POLYGON
+				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddNode
+				Icon 21	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddStartNode
+				Icon 23	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddEndNode
+				Icon 25	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
+				ModifierKeys On
+			PushButton
+				Calling DTPolylineremoveStartNode
+				Icon 27	File DTGetIconsFile()
+				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
+			PushButton
+				Calling DTPolylineRemoveEndNode
+				Icon 29	File DTGetIconsFile()
+				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
+			Separator
+			PushButton
+				Calling DTCombineIntoNew
+				Icon 31	File DTGetIconsFile()
+				HelpMsg "Combine selected objects into new object\nCombine selected into new"
+			ToolButton
+				Calling DTCreateGaps
+				Icon 33	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
+				ModifierKeys On
+	Else
+		Alter ButtonPad sButtonPadName Add
+			Separator
+			ToolButton
+				Calling DTRegionAdd
+				Icon 17	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POLYGON
+				HelpMsg "Add extra region to selected region\nAdd to selected region"
+				ModifierKeys On
+			ToolButton
+				Calling DTRegionRemove
+				Icon 19	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POLYGON
+				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddNode
+				Icon 21	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddStartNode
+				Icon 23	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
+				ModifierKeys On
+			ToolButton
+				Calling DTPolylineAddEndNode
+				Icon 25	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
+				ModifierKeys On
+			PushButton
+				Calling DTPolylineremoveStartNode
+				Icon 27	File DTGetIconsFile()
+				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
+			PushButton
+				Calling DTPolylineRemoveEndNode
+				Icon 29	File DTGetIconsFile()
+				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
+			Separator
+			PushButton
+				Calling DTCombineIntoNew
+				Icon 31	File DTGetIconsFile()
+				HelpMsg "Combine selected objects into new object\nCombine selected into new"
+			ToolButton
+				Calling DTCreateGaps
+				Icon 33	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
+				ModifierKeys On
+	End If
+
+	Call DTToggleDrawTools
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTAddToolsToButtonPad")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'	nButtonPadID	ID of buttonpad to add the tools to
+'	sButtonPadName	Name of button to add the tools to
+'				If ID = 0 then the name will be used, otherwise the ID will used
+'**********************************************************************************************''
+Sub DTAddToolsToRibbon()
+
+Dim	nCtrlIdx As Integer,
+	sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName As String
+
+OnError GoTo ErrorOccured
+
+	sTabName				= "TabSpatial"
+	sGroupName			= "SpatialEditBar"
+	sSplitButtonName		= "TransformSplitButton"
+	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
+
+'	nCtrlIdx = RBNSplitButtonGroupAddControl("sepTransformSplitButton", "", ""
+'		, ControlType_ContextMenuSeparator, sTabName, sGroupName
+'		, sSplitButtonName, sSplitButtonGroupName)
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", ""
+								, ControlType_ToolButton, sTabName, sGroupName
+								, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools"
+								, "Add extra region to the selected region."
+								, "Select a polygon from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
+						, ApplicationDirectory$() & "Images\PolygonAdd_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYGON)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTRegionAdd")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionRemove", "Remove from Region", ""
+								, ControlType_ToolButton, sTabName, sGroupName
+								, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools"
+								, "Remove drawn region from selected region."
+								, "Select a polygon from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
+						, ApplicationDirectory$() & "Images\PolygonRemove_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYGON)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTRegionRemove")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Combine selected objects into new object.", "Select multiple polygons and make sure you have an editable layer to insert the new object into.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsCombine_32.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCombineIntoNew")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Insert gaps from the editable layer where clicked into the editable layer.", "Make sure you have an editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsGap_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_LRG_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateGaps")
+	End If
+
+	sTabName				= "TabSpatial"
+	sGroupName			= "SpatialEditBar"
+	sSplitButtonName		= "NodesSplitButton"
+	sSplitButtonGroupName	= "NodesSplitButtonMenuGroup"
+
+'	nCtrlIdx = RBNSplitButtonGroupAddControl("sepNodesSplitButton", "", "", ControlType_ContextMenuSeparator, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddNode", "Add Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddNode_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineAddNode")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddStartNode", "Add Start Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new start node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddStartNode_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineAddStartNode")
+	End If
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddEndNode", "Add End Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new end node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddEndNode_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineAddEndNode")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveStartNode", "Remove Start Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove start node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveStartNode_32.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineRemoveStartNode")
+	End If
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveEndNode", "Remove End Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove end node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveEndNode_32.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineRemoveEndNode")
+	End If
+
+	Call DTToggleDrawTools
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTAddToolsToRibbon")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTWinFocusChangedHandler
+
+Dim	nWID As Integer
+
+OnError GoTo ErrorOccured
+
+	Call DTToggleDrawTools
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTWinFocusChangedHandler")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTWinChangedHandler
+
+OnError GoTo ErrorOccured
+
+	Call DTToggleDrawTools
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTWinChangedHandler")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTSelChangedHandler
+
+OnError GoTo ErrorOccured
+
+	Call DTToggleDrawTools
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTSelChangedHandler")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTToggleDrawTools
+
+Dim	nWID, nEditLayerID As Integer
+
+OnError GoTo ErrorOccured
+
+	If SystemInfo(SYS_INFO_MAPINFO_INTERFACE) = MIINTERFACE_CLASSICMENU Then
+		Alter Button DTRegionAdd 			Enable
+		Alter Button DTRegionRemove			Enable
+		Alter Button DTPolylineAddNode		Enable
+		Alter Button DTPolylineAddStartNode	Enable
+		Alter Button DTPolylineAddEndNode		Enable
+		Alter Button DTPolylineRemoveStartNode	Enable
+		Alter Button DTPolylineRemoveEndNode	Enable
+		Alter Button DTCombineIntoNew			Enable
+		Alter Button DTCreateGaps			Enable
+
+		nWID		= FrontWindow()
+
+		If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
+			Alter Button DTRegionAdd 			Disable
+			Alter Button DTRegionRemove			Disable
+			Alter Button DTPolylineAddNode		Disable
+			Alter Button DTPolylineAddStartNode	Disable
+			Alter Button DTPolylineAddEndNode		Disable
+			Alter Button DTPolylineRemoveStartNode	Disable
+			Alter Button DTPolylineRemoveEndNode	Disable
+		End If
+		If SelectionInfo(SEL_INFO_NROWS) < 2 Then
+			Alter Button DTCombineIntoNew			Disable
+		End If
+
+		If nWID = 0 Then
+			Alter Button DTRegionAdd 			Disable
+			Alter Button DTRegionRemove			Disable
+			Alter Button DTPolylineAddNode		Disable
+			Alter Button DTPolylineAddStartNode	Disable
+			Alter Button DTPolylineAddEndNode		Disable
+			Alter Button DTPolylineRemoveStartNode	Disable
+			Alter Button DTPolylineRemoveEndNode	Disable
+			Alter Button DTCombineIntoNew			Disable
+			Alter Button DTCreateGaps			Disable
+		Else
+			If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
+				Alter Button DTRegionAdd 			Disable
+				Alter Button DTRegionRemove			Disable
+				Alter Button DTPolylineAddNode		Disable
+				Alter Button DTPolylineAddStartNode	Disable
+				Alter Button DTPolylineAddEndNode		Disable
+				Alter Button DTPolylineRemoveStartNode	Disable
+				Alter Button DTPolylineRemoveEndNode	Disable
+				Alter Button DTCombineIntoNew			Disable
+				Alter Button DTCreateGaps			Disable
+			Else
+
+				nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
+				If nEditLayerID < 1 Then
+					Alter Button DTRegionAdd 			Disable
+					Alter Button DTRegionRemove			Disable
+					Alter Button DTPolylineAddNode		Disable
+					Alter Button DTPolylineAddStartNode	Disable
+					Alter Button DTPolylineAddEndNode		Disable
+					Alter Button DTPolylineRemoveStartNode	Disable
+					Alter Button DTPolylineRemoveEndNode	Disable
+					Alter Button DTCreateGaps			Disable
+				Else
+					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
+						Alter Button DTRegionAdd 			Disable
+						Alter Button DTRegionRemove			Disable
+						Alter Button DTPolylineAddNode		Disable
+						Alter Button DTPolylineAddStartNode	Disable
+						Alter Button DTPolylineAddEndNode		Disable
+						Alter Button DTPolylineRemoveStartNode	Disable
+						Alter Button DTPolylineRemoveEndNode	Disable
+					End If
+				End If
+			End If
+		End If
+	Else
+		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
+
+		nWID		= FrontWindow()
+
+		If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
+			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+		End If
+		If SelectionInfo(SEL_INFO_NROWS) < 2 Then
+			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+		End If
+
+		If nWID = 0 Then
+			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+		Else
+			If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
+				Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+			Else
+
+				nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
+				If nEditLayerID < 1 Then
+					Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+				Else
+					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
+						Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+					End If
+				End If
+			End If
+		End If
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTToggleDrawTools")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTRegionAdd
+
+OnError GoTo ErrorOccured
+
+Dim	oDrawn, oExisting As Object
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Table Selection
+	oDrawn	= CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_RECT, OBJ_TYPE_ELLIPSE, OBJ_TYPE_ROUNDRECT
+			oExisting = ConvertToRegion(oExisting)
+		Case OBJ_TYPE_REGION
+			'**continue Please
+		Case Else
+			Note "Please select an area based object to use this tool!"
+			Exit Sub
+	End Case
+
+	Update Selection
+		Set OBJ = Combine(oExisting, oDrawn)
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTRegionAdd")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTRegionRemove
+
+Dim	oDrawn, oExisting As Object
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Table Selection
+	oDrawn	= CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_RECT, OBJ_TYPE_ELLIPSE, OBJ_TYPE_ROUNDRECT
+			oExisting = ConvertToRegion(oExisting)
+		Case OBJ_TYPE_ARC
+			oExisting = ConvertToPline(oExisting)
+		Case OBJ_TYPE_REGION, OBJ_TYPE_LINE, OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select an area based object to use this tool!"
+			Exit Sub
+	End Case
+
+	Update Selection
+		Set OBJ = Erase(oExisting, oDrawn)
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTRegionRemove")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTPolylineAddNode
+
+Dim	oExisting As Object,
+	i, nSegment, nNode, nSegmentNearest, nNodeNearest As Integer,
+	fX, fY, fShortestDistance, fDistance As Float
+
+OnError GoTo ErrorOccured
+
+'	Set CoordSys Window FrontWindow()
+	Set CoordSys Table Selection
+	fX	= CommandInfo(CMD_INFO_X)
+	fY	= CommandInfo(CMD_INFO_Y)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_LINE
+			oExisting = ConvertToPline(oExisting)
+		Case OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select a line or a polyline to use this tool!"
+			Exit Sub
+	End Case
+
+	fShortestDistance	= 1000000	'meters, hoping that the users has clicked nearer than this
+
+	For nSegment = 1 To ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS)
+		For i = 1 To 2
+			If i = 1 Then
+				nNode = 1
+			Else
+				nNode = ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS + nSegment)
+			End If
+
+			fDistance	= Distance(fX, fY, ObjectNodeX(oExisting, nSegment, nNode), ObjectNodeY(oExisting, nSegment, nNode), "m")
+			If fDistance < fShortestDistance Then
+				fShortestDistance	= fDistance
+				nSegmentNearest	= nSegment
+				nNodeNearest	= nNode
+			End If
+		Next
+	Next	'nSegment
+
+	If nNodeNearest > 1 Then
+		'**Adding a new node after the last - need to add one to the node number
+		nNodeNearest		= nNodeNearest + 1
+	End If
+
+	Alter Object oExisting
+		Node Add Position nSegmentNearest, nNodeNearest ( fX, fY )
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTPolylineAddNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTPolylineAddStartNode
+
+Dim	oExisting As Object,
+	nSegment, nNode As Integer,
+	fX, fY As Float
+
+OnError GoTo ErrorOccured
+
+'	Set CoordSys Window FrontWindow()
+	Set CoordSys Table Selection
+	fX	= CommandInfo(CMD_INFO_X)
+	fY	= CommandInfo(CMD_INFO_Y)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_LINE
+			oExisting = ConvertToPline(oExisting)
+		Case OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select a line or a polyline to use this tool!"
+			Exit Sub
+	End Case
+
+	nSegment	= 1
+	nNode		= 1
+
+	Alter Object oExisting
+		Node Add Position nSegment, nNode ( fX, fY )
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTPolylineAddStartNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTPolylineAddEndNode
+
+Dim	oExisting As Object,
+	nSegment, nNode As Integer,
+	fX, fY As Float
+
+OnError GoTo ErrorOccured
+
+'	Set CoordSys Window FrontWindow()
+	Set CoordSys Table Selection
+	fX	= CommandInfo(CMD_INFO_X)
+	fY	= CommandInfo(CMD_INFO_Y)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_LINE
+			oExisting = ConvertToPline(oExisting)
+		Case OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select a line or a polyline to use this tool!"
+			Exit Sub
+	End Case
+
+	nSegment	= ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS)
+	nNode	= ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS + nSegment)
+
+	nNode	= nNode + 1
+	Alter Object oExisting
+		Node Add Position nSegment, nNode ( fX, fY )
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTPolylineAddEndNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTPolylineRemoveStartNode
+
+Dim	oExisting As Object,
+	nSegment, nNode As Integer,
+	fX, fY As Float
+
+OnError GoTo ErrorOccured
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select a polyline to use this tool!"
+			Exit Sub
+	End Case
+
+	If ObjectInfo(oExisting, OBJ_INFO_NPNTS) < 3 Then
+		Note "The selected object has too few nodes. Not possible to remove another node!"
+		Exit Sub
+	End If
+
+	nSegment	= 1
+	nNode	= 1
+
+	Alter Object oExisting
+		Node Remove Position nSegment, nNode
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTPolylineRemoveStartNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTPolylineRemoveEndNode
+
+Dim	oExisting As Object,
+	nSegment, nNode As Integer,
+	fX, fY As Float
+
+OnError GoTo ErrorOccured
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_PLINE
+			'**continue Please
+		Case Else
+			Note "Please select a line or a polyline to use this tool!"
+			Exit Sub
+	End Case
+
+	If ObjectInfo(oExisting, OBJ_INFO_NPNTS) < 3 Then
+		Note "The selected object has too few nodes. Not possible to remove another node!"
+		Exit Sub
+	End If
+
+	nSegment	= ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS)
+	nNode	= ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS + nSegment)
+
+	Alter Object oExisting
+		Node Remove Position nSegment, nNode
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTPolylineRemoveEndNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTCombineIntoNew
+
+Dim	oNew As Object,
+	sTab As String
+
+OnError GoTo ErrorOccured
+
+	sTab	= MAPGetEditLayerName(FrontWindow())
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+
+	Create Object As Union
+		From SelectionInfo(SEL_INFO_SELNAME)
+		Into Variable oNew
+
+	Insert Into sTab (OBJ)
+		Values (oNew)
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTCombineIntoNew")
+	Call ERRShow()
+
+End Sub
+
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTCreateGaps
+
+Dim	sTab As String,
+	oPoint, oBuffer As Object,
+	fX, fY, fZoom As Float
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Window FrontWindow()
+	fX		= CommandInfo(CMD_INFO_X)
+	fY		= CommandInfo(CMD_INFO_Y)
+	oPoint 	= CreatePoint(fX, fY)
+
+	sTab	= MAPGetEditLayerName(FrontWindow())
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+
+	Set Distance Units "m"
+	fZoom	= MapperInfo(FrontWindow(), MAPPER_INFO_ZOOM)
+	oBuffer	= CartesianBuffer(oPoint, 24, (fZoom / 4), "m")
+	Select * From sTab
+		Where OBJ Intersects oBuffer
+		Into __GAP__QUERY
+
+	If TableInfo("__GAP__QUERY", TAB_INFO_NROWS) > 1 Then
+		Objects Check From __GAP__QUERY Into Table sTab
+			Gap 1000 Units "sq m"
+	End If
+
+	Close Table __GAP__QUERY
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTCombineIntoNew")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DTGetIconsFile() As String
+
+OnError GoTo ErrorOccured
+
+	If msIconsFile = "" Then
+		msIconsFile	= ApplicationDirectory$() & "DrawTools.dll"
+	End If
+	DTGetIconsFile = msIconsFile
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTGetIconsFile")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTSetIconsFile(ByVal sFile As String)
+
+OnError GoTo ErrorOccured
+
+	msIconsFile	= sFile
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTSetIconsFile")
+	Call ERRShow()
+
+End Sub
+
