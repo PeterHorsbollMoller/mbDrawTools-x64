@@ -17,6 +17,7 @@
 '	11-04-2013 09:51:29	1.04	Minor changes, mostly cosmetic to the source code
 '					2.00 Included support for running DrawTools on 64 bit
 '	19-01-2016 13:25:16 2.10 Improved the precision on the tools by specifying the coordinate system of the table to edit and not the map or no coordsys
+'	01-09-2018 23:27:18 2.20 Added a tool that lets you set the xy coordinate of a node of a selected object
 '*******************************************************************************
 
 '-------------------------------------
@@ -28,8 +29,8 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"2.1"
-Define xYear			"2016"
+Define xVersion 		"2.20"
+Define xYear			"2018"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".ini"
@@ -67,6 +68,9 @@ OnError GoTo ErrorOccured
 	Call PRGISetApplicationName(xProgram)
 	Call PRGISetApplicationVersion(xVersion)
 	Call PRGISetApplicationCopyrightYear(xYear)
+
+	Call PRGISetApplicationImageUri(ApplicationDirectory$() & "Images\DrawTools_16.png")
+	Call PRGISetDescription("This DrawTools applications holds a number of tools for modifying existing objects.")
 
 	'***Enabling Debug if file exists
 	Call DEBUGEnableByFile(FILE_DBG)

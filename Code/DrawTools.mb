@@ -17,10 +17,12 @@ Include "Library\Defaults.def"
 Include "Library\DEBUGLib.def"
 Include "Library\ERRORLib.def"
 Include "Library\MAPPERLib.def"
+Include "Library\OBJLib.def"
 Include "Library\RIBBONLib.def"
 Include "Library\TABLELib.def"
 
 Include "DrawTools.def"
+Include "DLGSetNodeCoordinate.def"
 
 Dim	msIconsFile As String
 '**********************************************************************************************''
@@ -77,6 +79,13 @@ OnError GoTo ErrorOccured
 				DrawMode DM_CUSTOM_POINT
 				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
 				ModifierKeys On
+			ToolButton
+				Calling DTNodeSetCoordinate
+				Icon 25	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
 			PushButton
 				Calling DTPolylineremoveStartNode
 				Icon 27	File DTGetIconsFile()
@@ -141,6 +150,13 @@ OnError GoTo ErrorOccured
 				DrawMode DM_CUSTOM_POINT
 				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
 				ModifierKeys On
+			ToolButton
+				Calling DTNodeSetCoordinate
+				Icon 25	File DTGetIconsFile()
+				'Cursor nCorsor File FILE_DLL
+				Cursor MI_CURSOR_CROSSHAIR
+				DrawMode DM_CUSTOM_POINT
+				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
 			PushButton
 				Calling DTPolylineremoveStartNode
 				Icon 27	File DTGetIconsFile()
@@ -202,12 +218,9 @@ OnError GoTo ErrorOccured
 								, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools"
-								, "Add extra region to the selected region."
-								, "Select a polygon from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add extra region to the selected region.", "Select a polygon from the editable layer.")
 		'Set the button icon
-		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
-						, ApplicationDirectory$() & "Images\PolygonAdd_32.png")
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolygonAdd_32.png")
 		'Set DrawMode
 		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYGON)
 		'Set Cursor
@@ -216,14 +229,10 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTRegionAdd")
 	End If
 
-	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionRemove", "Remove from Region", ""
-								, ControlType_ToolButton, sTabName, sGroupName
-								, sSplitButtonName, sSplitButtonGroupName)
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionRemove", "Remove from Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools"
-								, "Remove drawn region from selected region."
-								, "Select a polygon from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove drawn region from selected region.", "Select a polygon from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
 						, ApplicationDirectory$() & "Images\PolygonRemove_32.png")
@@ -305,6 +314,19 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
 		'Set Custom MapBasic Handle to the button
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineAddEndNode")
+	End If
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTNodeSetCoordinate", "Set Node Coordinate", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Set coordinate for specific node", "Make sure you have selected a polyline from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\NodeSetCoordinate_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTNodeSetCoordinate")
 	End If
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveStartNode", "Remove Start Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
@@ -481,6 +503,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
@@ -494,6 +517,7 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 		End If
@@ -507,6 +531,7 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
@@ -518,6 +543,7 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
@@ -531,6 +557,7 @@ OnError GoTo ErrorOccured
 					Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
@@ -541,6 +568,7 @@ OnError GoTo ErrorOccured
 						Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 						Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 						Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+						Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 					End If
@@ -809,6 +837,61 @@ OnError GoTo ErrorOccured
 '-------------------------
 ErrorOccured:
 	Call ERRCreate(Err(), Error$(), "DTPolylineAddEndNode")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTNodeSetCoordinate
+
+Dim	oExisting, oPoint As Object,
+	nSegment, nNode As Integer,
+	fX, fY, fTolerance As Float
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Table Selection
+	fX		= CommandInfo(CMD_INFO_X)
+	fY		= CommandInfo(CMD_INFO_Y)
+	oPoint	= CreatePoint(fX, fY)
+
+	Fetch First From Selection
+	oExisting	= Selection.OBJ
+
+	Do Case ObjectInfo(oExisting, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_PLINE, OBJ_TYPE_REGION
+			'**continue Please
+		Case Else
+			Note "Please select a polyline or polygon/region to use this tool!"
+			Close Table SelectionInfo(SEL_INFO_SELNAME)
+			Exit Sub
+	End Case
+
+	fTolerance	= 1	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+	If not OBJFindSegmentAndNode(oExisting, oPoint, fTolerance, nSegment, nNode) Then
+		Note "Try to click a bit closer to the node you want to modify!"
+		Close Table SelectionInfo(SEL_INFO_SELNAME)
+		Exit Sub
+	End If
+
+	If not DLGSetNodeCoordinate(oExisting, nSegment, nNode) Then
+		Close Table SelectionInfo(SEL_INFO_SELNAME)
+		Exit Sub
+	End If
+
+	Update Selection
+		Set OBJ = oExisting
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTNodeSetCoordinate")
 	Call ERRShow()
 
 End Sub

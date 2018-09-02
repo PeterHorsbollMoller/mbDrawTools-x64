@@ -1,0 +1,367 @@
+'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Pitney Bowes
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "Library\MapBasic.def"
+Include "Library\Icons.def"
+Include "Library\Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\TABLELib.def"
+
+Include "DLGSetNodeCoordinate.def"
+
+Declare Sub DLGSNCDialog_OnLoad
+Declare Sub DLGSNCOK_Clicked
+Declare Sub DLGSNCPrevNode_Clicked
+Declare Sub DLGSNCNextNode_Clicked
+Declare Sub DLGSNCZoomIn_Clicked
+Declare Sub DLGSNCZoomOut_Clicked
+Declare Sub DLGSNCRefreshDialog
+Declare Sub DLGSNCRefreshObject
+
+Define	CTRL_LBL_SEGMENT_NODE		100
+Define	CTRL_CMD_PREV_NODE			200
+Define	CTRL_CMD_NEXT_NODE			210
+Define	CTRL_TXT_X				300
+Define	CTRL_TXT_Y				310
+
+Dim	mnSegment, mnNode, mnMID As Integer,
+	moInput, moPoint As Object,
+	mfX, mfY As Float,
+	mpenTemp, mpenOrig As Pen,
+	msymTemp As Symbol
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGSetNodeCoordinate( oInput As Object			'**Object to change the nodes of, changed object will also be returned via the variable
+						, ByVal nSegment As Integer	'**Default segment of the object
+						, ByVal nNode As Integer		'**Default node of the object to change
+						) As Logical				'**Returns TRUE if the user clicked OK to the dialog, else FALSE
+
+OnError GoTo ErrorOccured
+
+DLGSetNodeCoordinate = FALSE
+
+	mnSegment	= nSegment
+	mnNode	= nNode
+	moInput	= oInput
+
+	mpenTemp	= MakePen (4, 3, 16711935)
+	mpenOrig	= objectInfo(moInput, OBJ_INFO_PEN)
+	msymTemp	= MakeFontSymbol(60,9445631,20,"MapInfo Symbols",256,0)
+
+	Alter Object moInput
+		Info OBJ_INFO_PEN, mpenTemp
+
+	mnMID	= FrontWindow()
+	Create Table __NODE__CHANGER
+		(ID Integer)
+		File TempFileName$("") Hide
+	Create Map For __NODE__CHANGER
+		Using SelectionInfo(SEL_INFO_TABLENAME)
+	Create Point
+		Into Variable moPoint
+		(ObjectNodeX(moInput, mnSegment, mnNode), ObjectNodeY(moInput, mnSegment, mnNode))
+		Symbol msymTemp
+
+	Insert Into __NODE__CHANGER (OBJ)
+		Values (moInput)
+	Insert Into __NODE__CHANGER (OBJ)
+		Values (moPoint)
+
+	Add Map
+		Window mnMID
+		Layer __NODE__CHANGER
+
+	Dialog
+		Title "Set Node Coordinate"
+		Calling DLGSNCDialog_OnLoad
+
+		Control StaticText		ID CTRL_LBL_SEGMENT_NODE
+			Position 5,7		Width 150
+			Title "Segment " & FormatNumber$(mnSegment) & " Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+
+		Control Button			ID CTRL_CMD_PREV_NODE
+			Position 160,5		Width 20
+			Title "&<"
+			Calling DLGSNCPrevNode_Clicked
+		Control Button			ID CTRL_CMD_NEXT_NODE
+			Position 185,5		Width 20
+			Title "&>"
+			Calling DLGSNCNextNode_Clicked
+
+		Control StaticText
+			Position 5,25
+			Title "&X:"
+		Control EditText		ID CTRL_TXT_X
+			Position 5,35		Width 95
+		Control StaticText
+			Position 110,25
+			Title "&Y:"
+		Control EditText		ID CTRL_TXT_Y
+			Position 110,35		Width 95
+
+		Control Button
+			Position 5,55		Width 40
+			Title "Zoom &In"
+			Calling DLGSNCZoomIn_Clicked
+		Control Button
+			Position 50,55		Width 40
+			Title "Zoom &Out"
+			Calling DLGSNCZoomOut_Clicked
+
+		Control OKButton
+			Position 120,55		Width 40
+			Title "Save"
+			Calling DLGSNCOK_Clicked
+		Control CancelButton
+			Position 165,55	Width 40
+
+	If not CommandInfo(CMD_INFO_DLG_OK) Then
+		Drop Table __NODE__CHANGER
+		Exit Function
+	End If
+
+	Drop Table __NODE__CHANGER
+	oInput	= moInput
+	Alter Object oInput
+		Info OBJ_INFO_PEN, mpenOrig
+
+DLGSetNodeCoordinate = TRUE
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSetNodeCoordinate")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCDialog_OnLoad
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCDialog_OnLoad")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCOK_Clicked
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshObject
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCNextNode_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCPrevNode_Clicked
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshObject
+
+	mnSegment	= mnSegment
+	mnNode	= mnNode - 1
+	If mnNode <= 0 Then
+		mnNode = 1
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCPrevNode_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCNextNode_Clicked
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshObject
+
+	mnSegment	= mnSegment
+	mnNode	= mnNode + 1
+	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCNextNode_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCZoomIn_Clicked
+
+OnError GoTo ErrorOccured
+
+	Set Map
+		Window mnMID
+		Zoom (0.5 * MapperInfo(mnMID, MAPPER_INFO_ZOOM))
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCZoomIn_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCZoomOut_Clicked
+
+OnError GoTo ErrorOccured
+
+	Set Map
+		Window mnMID
+		Zoom (2 * MapperInfo(mnMID, MAPPER_INFO_ZOOM))
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCZoomOut_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCRefreshDialog
+
+OnError GoTo ErrorOccured
+
+	mfX	= ObjectNodeX(moInput, mnSegment, mnNode)
+	mfY	= ObjectNodeY(moInput, mnSegment, mnNode)
+
+	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+'	Alter Control CTRL_TXT_X				Value FormatNumber$(mfX)
+	Alter Control CTRL_TXT_X				Value Format$(mfX, ",#.######")
+'	Alter Control CTRL_TXT_Y				Value FormatNumber$(mfY)
+	Alter Control CTRL_TXT_Y				Value Format$(mfY, ",#.######")
+
+	Alter Object moPoint
+		Geography OBJ_GEO_POINTX , mfX
+	Alter Object moPoint
+		Geography OBJ_GEO_POINTY , mfY
+	Alter Object moPoint
+		Info OBJ_INFO_SYMBOL, msymTemp
+
+	Set Map
+		Window mnMID
+		Center (mfX, mfY)
+
+	Update __NODE__CHANGER
+		Set OBJ = moPoint
+		Where ROWID = 2
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCRefreshDialog")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCRefreshObject
+
+Dim	fX, fY As Float,
+	sX, sY As String
+
+OnError GoTo ErrorOccured
+
+	sX	= ReadControlValue(CTRL_TXT_X)
+	sY	= ReadControlValue(CTRL_TXT_Y)
+
+	If sX = "" or sY = "" Then
+		Note "The X og Y coordinate are empty. Ignoring this change"
+		Exit Sub
+	End if
+
+	fX	= DeformatNumber$(sX)
+	fY	= DeformatNumber$(sY)
+
+	Alter Object moInput
+		Node Set Position mnSegment, mnNode (fX, fY)
+	Alter Object moInput
+		Info OBJ_INFO_PEN, mpenTemp
+
+	Update __NODE__CHANGER
+		Set OBJ = moInput
+		Where ROWID = 1
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCRefreshDialog")
+	Call ERRShow()
+
+End Sub
