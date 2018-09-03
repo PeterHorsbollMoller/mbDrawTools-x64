@@ -213,9 +213,7 @@ OnError GoTo ErrorOccured
 '		, ControlType_ContextMenuSeparator, sTabName, sGroupName
 '		, sSplitButtonName, sSplitButtonGroupName)
 
-	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", ""
-								, ControlType_ToolButton, sTabName, sGroupName
-								, sSplitButtonName, sSplitButtonGroupName)
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
 		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add extra region to the selected region.", "Select a polygon from the editable layer.")
