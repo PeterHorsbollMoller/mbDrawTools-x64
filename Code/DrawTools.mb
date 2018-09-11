@@ -12,14 +12,21 @@ Include "Icons.def"
 Include "Menu.def"
 '**default constants...
 Include "Library\Defaults.def"
+Include "Library\MI_ICONS_X64.def"
+Include "Library\RibbonElements.def"
 
 '-------------------------------------
+Include "Library\Types\T_MI_POINT.def"
+Include "Library\DATETIMELib.def"
 Include "Library\DEBUGLib.def"
 Include "Library\ERRORLib.def"
 Include "Library\MAPPERLib.def"
+Include "Library\MATHLib.def"
 Include "Library\OBJLib.def"
+Include "Library\ProgramInfo.def"
 Include "Library\RIBBONLib.def"
 Include "Library\TABLELib.def"
+Include "Library\Dialogs\DLGSelectTable.def"
 
 Include "DrawTools.def"
 Include "DLGSetNodeCoordinate.def"
@@ -204,8 +211,8 @@ Dim	nCtrlIdx As Integer,
 
 OnError GoTo ErrorOccured
 
-	sTabName				= "TabSpatial"
-	sGroupName			= "SpatialEditBar"
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_GROUP_SPATIAL_EDIT
 	sSplitButtonName		= "TransformSplitButton"
 	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
 
@@ -216,7 +223,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add extra region to the selected region.", "Select a polygon from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add extra region to the selected region.", "Select a polygon from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolygonAdd_32.png")
 		'Set DrawMode
@@ -230,7 +237,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionRemove", "Remove from Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove drawn region from selected region.", "Select a polygon from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove drawn region from selected region.", "Select a polygon from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
 						, ApplicationDirectory$() & "Images\PolygonRemove_32.png")
@@ -245,7 +252,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Combine selected objects into new object.", "Select multiple polygons and make sure you have an editable layer to insert the new object into.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Combine selected objects into new object.", "Select multiple polygons and make sure you have an editable layer to insert the new object into.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsCombine_32.png")
 		'Set Custom MapBasic Handle to the button
@@ -255,7 +262,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Insert gaps from the editable layer where clicked into the editable layer.", "Make sure you have an editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Insert gaps from the editable layer where clicked into the editable layer.", "Make sure you have an editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsGap_32.png")
 		'Set DrawMode
@@ -266,8 +273,8 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateGaps")
 	End If
 
-	sTabName				= "TabSpatial"
-	sGroupName			= "SpatialEditBar"
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_GROUP_SPATIAL_EDIT
 	sSplitButtonName		= "NodesSplitButton"
 	sSplitButtonGroupName	= "NodesSplitButtonMenuGroup"
 
@@ -276,7 +283,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddNode", "Add Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddNode_32.png")
 		'Set DrawMode
@@ -290,7 +297,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddStartNode", "Add Start Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new start node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new start node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddStartNode_32.png")
 		'Set DrawMode
@@ -303,7 +310,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddEndNode", "Add End Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Add new end node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new end node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddEndNode_32.png")
 		'Set DrawMode
@@ -316,7 +323,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTNodeSetCoordinate", "Set Node Coordinate", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Set coordinate for specific node", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Set coordinate for specific node", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\NodeSetCoordinate_32.png")
 		'Set DrawMode
@@ -330,7 +337,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveStartNode", "Remove Start Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove start node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove start node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveStartNode_32.png")
 		'Set Custom MapBasic Handle to the button
@@ -339,11 +346,23 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveEndNode", "Remove End Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, "DrawTools", "Remove end node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove end node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveEndNode_32.png")
 		'Set Custom MapBasic Handle to the button
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineRemoveEndNode")
+	End If
+
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_GROUP_SPATIAL_CREATE
+	nCtrlIdx = RBNGroupInsertControlBefore("DTNodeCreateAnglePoints", "Create Angle Node Points", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Create node points with minimum angle for polygons/polylines in a table.", "")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, MI_IMG_SPA_CALCANGLE_16, MI_IMG_SPA_CALCANGLE_32)
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateAnglePointAlong")
 	End If
 
 	Call DTToggleDrawTools
@@ -1113,3 +1132,134 @@ ErrorOccured:
 
 End Sub
 
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTCreateAnglePointAlong
+
+Dim	sTab, sNodeTab, sOutputTabFile As String,
+	nRow, nSegm, nNode As Integer,
+	oCur As Object,
+	tCur, tPrev, tNext As T_MI_POINT,
+	fAnglePrev, fAngleNext, fAngle As Float,
+	aObj, aRowID As Alias,
+	symCur As Symbol
+
+OnError GoTo ErrorOccured
+
+	sTab = DLGSelectTable(TAB_USE_ALL_MAPPABLE_BUT_IMAGES, "Calculate Node Angles", "Select table to run thru", "", FALSE, sTab)
+	If sTab = "" Then
+		Exit Sub
+	End If
+
+	Set CoordSys Table sTab
+
+'	If TableInfo(sTab, TAB_INFO_TYPE) = TAB_TYPE_RESULT Then
+		sNodeTab	= "Node Angles" & DATEGetISODate(CurDate())
+'	Else
+'		sNodeTab	= PathToFileName$(TableInfo(sTab, TAB_INFO_TABFILE),
+'	End If
+	sOutputTabFile = PathToDirectory$(TempFileName$("")) & sNodeTab & ".tab"
+	sNodeTab		= PathToTableName$(sOutputTabFile)
+
+	If not TABIsOpen(sNodeTab) Then
+		Create Table sNodeTab
+			( TABLE_NAME		Char(50)
+			, RECORD_NO		Integer
+			, NODE_NO			Integer
+			, MINIMUM_ANGLE	Float
+			)
+			File sOutputTabFile
+		Create Map For sNodeTab
+			Using sTab
+	End If
+
+'	Set Table Redraw Off
+
+	aObj		= sTab & ".OBJ"
+	aRowID	= sTab & ".ROWID"
+	symCur	= CurrentSymbol()
+
+	Fetch First From sTab
+	Do Until EOT(sTab)
+		oCur = aObj
+		nRow	= aRowID
+
+		If ObjectInfo(oCur, OBJ_INFO_TYPE) In (OBJ_TYPE_PLINE, OBJ_TYPE_REGION) Then
+			For nSegm = 1 To ObjectInfo(oCur, OBJ_INFO_NPOLYGONS)
+				tPrev.fX	= ObjectNodeX(oCur, nSegm, 1)
+				tPrev.fY	= ObjectNodeY(oCur, nSegm, 1)
+				tCur.fX	= ObjectNodeX(oCur, nSegm, 2)
+				tCur.fY	= ObjectNodeY(oCur, nSegm, 2)
+
+				For nNode = 2 To (ObjectInfo(oCur, OBJ_INFO_NPOLYGONS + nSegm) - 1)
+'					tPrev.fX	= ObjectNodeX(oCur, nSegm, (nNode - 1))
+'					tPrev.fY	= ObjectNodeY(oCur, nSegm, (nNode - 1))
+'					tCur.fX	= ObjectNodeX(oCur, nSegm, nNode)
+'					tCur.fY	= ObjectNodeY(oCur, nSegm, nNode)
+					tNext.fX	= ObjectNodeX(oCur, nSegm, (nNode + 1))
+					tNext.fY	= ObjectNodeY(oCur, nSegm, (nNode + 1))
+
+					fAnglePrev	= MATHGetDirection(tCur, tPrev)
+					fAngleNext	= MATHGetDirection(tCur, tNext)
+
+'					Print "Node: " & nNode & ": Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
+
+					fAngle		= Maximum(fAnglePrev, fAngleNext) - Minimum(fAnglePrev, fAngleNext)
+					fAngle		= Minimum(fAngle, (360 - fAngle))
+
+'					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
+
+					Insert Into sNodeTab
+						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
+						Values
+						(sTab, nRow, nNode, fAngle, tmipToPointWithStyle(tCur, symCur))
+
+					tPrev.fX	= tCur.fX
+					tPrev.fY	= tCur.fY
+					tCur.fX	= tNext.fX
+					tCur.fY	= tNext.fY
+				Next
+
+				If ObjectInfo(oCur, OBJ_INFO_TYPE) = OBJ_TYPE_REGION Then
+'					tPrev.fX	= ObjectNodeX(oCur, nSegm, (ObjectInfo(oCur, OBJ_INFO_NPOLYGONS + nSegm) - 1))
+'					tPrev.fY	= ObjectNodeY(oCur, nSegm, (ObjectInfo(oCur, OBJ_INFO_NPOLYGONS + nSegm) - 1))
+'					tCur.fX	= ObjectNodeX(oCur, nSegm, (ObjectInfo(oCur, OBJ_INFO_NPOLYGONS + nSegm)))
+'					tCur.fY	= ObjectNodeY(oCur, nSegm, (ObjectInfo(oCur, OBJ_INFO_NPOLYGONS + nSegm)))
+					tNext.fX	= ObjectNodeX(oCur, nSegm, 2)
+					tNext.fY	= ObjectNodeY(oCur, nSegm, 2)
+
+					fAnglePrev	= MATHGetDirection(tCur, tPrev)
+					fAngleNext	= MATHGetDirection(tCur, tNext)
+
+'					Print "Node: 1: Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
+
+					fAngle		= Maximum(fAnglePrev, fAngleNext) - Minimum(fAnglePrev, fAngleNext)
+					fAngle		= Minimum(fAngle, (360 - fAngle))
+
+'					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
+
+					Insert Into sNodeTab
+						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
+						Values
+						(sTab, nRow, 1, fAngle, tmipToPointWithStyle(tCur, symCur))
+				End If
+			Next
+		End If
+
+		Fetch Next From sTab
+	Loop
+
+'	Set Table Redraw On
+
+	Call RBNNotificationShow(PRGIGetApplicationName(), "The nodes are stored in a temporary table. Rename the table to keep the result.", Notify_Info, 20000)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTCreateAnglePointAlong")
+	Call ERRShow()
+
+End Sub

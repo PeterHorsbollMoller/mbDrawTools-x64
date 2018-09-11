@@ -13,6 +13,7 @@
 	Save Account=0
 	Create Tagfile=0
 	CTags Legacy Support=0
+	Def Out Path=D:\Dropbox (Horsboll-Moller)\3. MB_Kode
 [uemakeXp]
 	ReleaseMode=0
 [Debug Settings]

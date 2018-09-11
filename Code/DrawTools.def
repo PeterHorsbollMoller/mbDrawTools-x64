@@ -20,3 +20,4 @@ Declare Sub DTCreateGaps
 Declare Function DTGetIconsFile() As String
 Declare Sub DTSetIconsFile(ByVal sFile As String)
 
+Declare Sub DTCreateAnglePointAlong

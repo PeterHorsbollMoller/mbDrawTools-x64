@@ -1,17 +1,21 @@
 [LINK]
-Application=..\DrawTools.mbx
+Application=..\DrawTools x64\DrawTools.mbx
 Module=Library\ARRAYLib.mbo
 Module=Library\CONFIGFILELib.mbo
+Module=Library\DATETIMELib.mbo
 Module=Library\DEBUGLib.mbo
 Module=Library\FILELib.mbo
 Module=Library\ERRORLib.mbo
 Module=Library\MAPPERLib.mbo
+Module=Library\MATHLib.mbo
 Module=Library\OBJLib.mbo
 Module=Library\ProgramInfo.mbo
 Module=Library\RESSTRNGLib.mbo
 Module=Library\RIBBONLib.mbo
 Module=Library\STRINGLib.mbo
 Module=Library\TABLELib.mbo
+Module=Library\Types\T_MI_POINT.mbo
+Module=Library\Dialogs\DLGSelectTable.mbo
 Module=DrawToolsMenu.mbo
 Module=DrawTools.mbo
 Module=DLGSetNodeCoordinate.mbo

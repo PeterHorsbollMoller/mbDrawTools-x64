@@ -18,6 +18,7 @@
 '					2.00 Included support for running DrawTools on 64 bit
 '	19-01-2016 13:25:16 2.10 Improved the precision on the tools by specifying the coordinate system of the table to edit and not the map or no coordsys
 '	01-09-2018 23:27:18 2.20 Added a tool that lets you set the xy coordinate of a node of a selected object
+'	11-09-2018 07:36:31 2.30	Added a tool that can calculate angles between segments along a polyline or polygon
 '*******************************************************************************
 
 '-------------------------------------
@@ -29,7 +30,7 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"2.20"
+Define xVersion 		"2.30"
 Define xYear			"2018"
 Define xAddToMenuBar	FALSE
 
