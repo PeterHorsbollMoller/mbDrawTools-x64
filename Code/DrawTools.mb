@@ -239,8 +239,7 @@ OnError GoTo ErrorOccured
 		'Create & Set the button tooltip
 		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove drawn region from selected region.", "Select a polygon from the editable layer.")
 		'Set the button icon
-		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, ""
-						, ApplicationDirectory$() & "Images\PolygonRemove_32.png")
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolygonRemove_32.png")
 		'Set DrawMode
 		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYGON)
 		'Set Cursor
