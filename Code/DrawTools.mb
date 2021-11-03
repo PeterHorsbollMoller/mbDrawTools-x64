@@ -29,6 +29,8 @@ Include "Library\TABLELib.def"
 Include "Library\Dialogs\DLGSelectTable.def"
 
 Include "DrawTools.def"
+Include "DLGIsoscelesTrapez.def"
+Include "DLGArrow.def"
 Include "DLGSetNodeCoordinate.def"
 
 Dim	msIconsFile As String
@@ -353,6 +355,42 @@ OnError GoTo ErrorOccured
 	End If
 
 	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_GROUP_SPATIAL_CREATE		'SpatialCreateBar
+'	sSplitButtonName		= "NodesSplitButton"
+'	sSplitButtonGroupName	= "NodesSplitButtonMenuGroup"
+	sSplitButtonName		= "SpatialCreateInsertSplitButton"
+	sSplitButtonGroupName	= "InsertRegionsMenuGroup"
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawArrow", "Arrow", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw an Arrow", "Make sure you have an editable layer in your map.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\Arrows_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYLINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawArrow")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawIsocelesTrapez", "Isoceles Trapezoid", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Isoceles Trapezoid using direction and size details", "Make sure you have an editable layer in your map.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\IsocelesTrapez_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawIsocelesTrapez")
+	End If
+
+
+	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE
 	nCtrlIdx = RBNGroupInsertControlBefore("DTNodeCreateAnglePoints", "Create Angle Node Points", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
 	If nCtrlIdx > 0 Then
@@ -524,6 +562,8 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawIsocelesTrapez", TRUE)
 
 		nWID		= FrontWindow()
 
@@ -576,7 +616,10 @@ OnError GoTo ErrorOccured
 					Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTDrawIsocelesTrapez", FALSE)
 				Else
 					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 						Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -1091,6 +1134,185 @@ ErrorOccured:
 End Sub
 
 '**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTDrawArrow
+
+Dim	oDrawn, oLineStart, oLineEnd, oBuffer, oArrow, oArrowLine, oArrowTail, oArrowHead, oPoint As Object,
+	fStartX, fStartY, fEndX, fEndY As Float,
+	nWID, nNumNodes As Integer,
+	sTab As String
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+	sTab	= MAPGetEditLayerName(nWID)
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+	Set CoordSys Table sTab
+
+	oDrawn	= CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+	If not DLGArrow() Then
+		Exit Sub
+	End If
+
+	oArrowLine = OBJRemoveDuplicateNodes(oDrawn, 0.5)	'meters
+
+	'**Creating Arrow Head at the end of the line
+	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
+	fEndX		= ObjectNodeX(oArrowLine, 1, nNumNodes)
+	fEndY		= ObjectNodeY(oArrowLine, 1, nNumNodes)
+
+	oBuffer		= Buffer(CreatePoint(fEndX, fEndY), 20, DLGAGetBufferWidth(), "m")
+	oArrowLine	= Erase(oArrowLine, oBuffer)
+	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
+
+	Create Pline
+		Into Variable oLineEnd
+		0
+	Alter Object oLineEnd
+		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, nNumNodes), ObjectNodeY(oArrowLine, 1, nNumNodes))
+	Alter Object oLineEnd
+		Node Add Position 1, 2 (fEndX, fEndY)
+
+	Do Case DLGAGetArrowType(ARROW_END_HEAD)
+		Case ARROW_END_TYPE_ROUNDED
+			'Print "Arrow Head: Rounded"
+			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 3, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+			'oArrowLine	= Erase(oArrowLine, oArrowHead)
+		Case ARROW_END_TYPE_FLAT
+			'Print "Arrow Head: Flat"
+			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 2, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+			oArrowLine	= Erase(oArrowLine, oArrowHead)
+		Case ARROW_END_TYPE_ARROW
+			'Print "Arrow Head: Arrow"
+			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 1, DLGAGetArrowWidth(ARROW_END_HEAD), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+			oArrowLine	= Erase(oArrowLine, oArrowHead)
+	End Case
+
+	'**Creating Arrow Tail at the start of the line
+	fStartX		= ObjectNodeX(oArrowLine, 1, 1)
+	fStartY		= ObjectNodeY(oArrowLine, 1, 1)
+
+	oBuffer		= Buffer(CreatePoint(fStartX, fStartY), 20, DLGAGetBufferWidth(), "m")
+	oArrowLine	= Erase(oArrowLine, oBuffer)
+
+	Create Pline
+		Into Variable oLineStart
+		0
+	Alter Object oLineStart
+		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, 1), ObjectNodeY(oArrowLine, 1, 1))
+	Alter Object oLineStart
+		Node Add Position 1, 2 (fStartX, fStartY)
+
+	Do Case DLGAGetArrowType(ARROW_END_TAIL)
+		Case ARROW_END_TYPE_ROUNDED
+			'Print "Arrow Tail: Rounded"
+			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 3, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+			'oArrowLine	= Erase(oArrowLine, oArrowTail)
+		Case ARROW_END_TYPE_FLAT
+			'Print "Arrow Tail: Flat"
+			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 2, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+			oArrowLine	= Erase(oArrowLine, oArrowTail)
+		Case ARROW_END_TYPE_ARROW
+			'Print "Arrow Tail: Arrow"
+			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 1, DLGAGetArrowWidth(ARROW_END_TAIL), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+			oArrowLine	= Erase(oArrowLine, oArrowTail)
+	End Case
+
+	oArrow		= Buffer(oArrowLine, 20, DLGAGetBufferWidth(), "m")
+
+	oArrow		= Combine(oArrow, oArrowHead)
+	oArrow		= Combine(oArrow, oArrowTail)
+
+	Insert Into sTab (OBJ) Values (oArrow)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTDrawArrow")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTDrawIsocelesTrapez
+
+Dim	nWID As Integer,
+	fStartX, fStartY, fEndX, fEndY, fDirection, fDistance As Float,
+	sTab As String,
+	oPoint, oGeometry As Object
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+	sTab	= MAPGetEditLayerName(nWID)
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+	Set CoordSys Table sTab
+
+	fStartX	= CommandInfo(CMD_INFO_X)
+	fStartY	= CommandInfo(CMD_INFO_Y)
+	fEndX	= CommandInfo(CMD_INFO_X2)
+	fEndY	= CommandInfo(CMD_INFO_Y2)
+
+'	Note FormatNumber$(fStartX) & " | " & FormatNumber$(fStartY)
+
+	fDirection	= MATHGetDirection(fStartX, fStartY, fEndX, fEndY)
+	fDistance		= Round(CartesianDistance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+
+'	Note FormatNumber$(fDirection) & " | " & FormatNumber$(fDistance)
+	If fDistance = -1 Then
+		fDistance		= Round(Distance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+	End If
+
+	If Not DLGIsoscelesTrapez(fStartX, fStartY, fDirection, fDistance, -1, -1, -1) Then
+		Exit Sub
+	End If
+
+	oPoint	= CreatePoint(DLGITGetX(), DLGITGetY())
+	oGeometry = OBJCreateTrapez(oPoint, DLGITGetDirection(), DLGITGetLength(), DLGITGetWidthAtStart(), DLGITGetWidthAtEnd(), DLGITAddMidPointNode(), DLGITGetCalculationMethod())
+
+	Insert Into sTab (OBJ) Values (oGeometry)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTDrawIsocelesTrapez")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
 'Parameters:
 '	:
@@ -1201,8 +1423,8 @@ OnError GoTo ErrorOccured
 					tNext.fX	= ObjectNodeX(oCur, nSegm, (nNode + 1))
 					tNext.fY	= ObjectNodeY(oCur, nSegm, (nNode + 1))
 
-					fAnglePrev	= MATHGetDirection(tCur, tPrev)
-					fAngleNext	= MATHGetDirection(tCur, tNext)
+					fAnglePrev	= MATHGetDirection(tCur.fX, tCur.fY, tPrev.fX, tPrev.fY)
+					fAngleNext	= MATHGetDirection(tCur.fX, tCur.fY, tNext.fX, tNext.fY)
 
 '					Print "Node: " & nNode & ": Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
 
@@ -1230,8 +1452,8 @@ OnError GoTo ErrorOccured
 					tNext.fX	= ObjectNodeX(oCur, nSegm, 2)
 					tNext.fY	= ObjectNodeY(oCur, nSegm, 2)
 
-					fAnglePrev	= MATHGetDirection(tCur, tPrev)
-					fAngleNext	= MATHGetDirection(tCur, tNext)
+					fAnglePrev	= MATHGetDirection(tCur.fX, tCur.fY, tPrev.fX, tPrev.fY)
+					fAngleNext	= MATHGetDirection(tCur.fX, tCur.fY, tNext.fX, tNext.fY)
 
 '					Print "Node: 1: Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
 

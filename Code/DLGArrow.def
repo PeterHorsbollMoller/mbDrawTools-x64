@@ -1,0 +1,18 @@
+Define	ARROW_END_TYPE_ROUNDED	1
+Define	ARROW_END_TYPE_FLAT		2
+Define	ARROW_END_TYPE_ARROW	3
+
+Define	ARROW_END_HEAD			1
+Define	ARROW_END_TAIL			2
+
+Declare Function DLGArrow() As Logical
+
+Declare Function DLGAGetBufferWidth() As Float
+Declare Function DLGAGetBufferResolution() As Integer
+
+Declare Function DLGAGetArrowType(ByVal nArrowEnd As Integer) As Integer
+Declare Function DLGAGetArrowWidth(ByVal nArrowEnd As Integer) As Float
+Declare Function DLGAGetArrowLength(ByVal nArrowEnd As Integer) As Float
+Declare Function DLGAGetArrowWidthPct(ByVal nArrowEnd As Integer) As Integer
+Declare Function DLGAGetArrowLengthPct(ByVal nArrowEnd As Integer) As Integer
+

@@ -1,0 +1,17 @@
+Declare Function DLGIsoscelesTrapez(	  ByVal fX As Float					'Default location X to show in dialog
+								, ByVal fY As Float					'Default location Y to show in dialog
+								, ByVal fDirection As Float			'Default direction to show in dialog
+								, ByVal fLength As Float				'Default length to show in dialog
+								, ByVal fWidthAtStart As Float		'Default width at start to show in dialog
+								, ByVal fWidthAtEnd As Float			'Default width at end to show in dialog
+								, ByVal nCalculationMethod As Float	'Default calculation method at end to show in dialog, -1 to use default
+								) As Logical
+
+Declare Function DLGITGetX() As Float					'The start location for the orientated geometry
+Declare Function DLGITGetY() As Float					'The start location for the orientated geometry
+Declare Function DLGITGetDirection() As Float			'In MapInfo 360 degrees. 0 towards east and counter clockwise
+Declare Function DLGITGetLength() As Float				'In meters
+Declare Function DLGITGetWidthAtStart() As Float			'Width at starting point, if zero geometry will be a triangle
+Declare Function DLGITGetWidthAtEnd() As Float			'Width at end point, if zero geometry will be a triangle
+Declare Function DLGITAddMidPointNode() As Logical		'Determines if the trapez should have a node at the mid point on the top and bottom sides
+Declare Function DLGITGetCalculationMethod() As Integer	'CALC_METHOD_CARTESIAN / CALC_METHOD_SPERICAL

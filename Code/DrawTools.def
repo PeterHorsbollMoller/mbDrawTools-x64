@@ -16,6 +16,8 @@ Declare Sub DTPolylineRemoveStartNode
 Declare Sub DTPolylineRemoveEndNode
 Declare Sub DTCombineIntoNew
 Declare Sub DTCreateGaps
+Declare Sub DTDrawArrow
+Declare Sub DTDrawIsocelesTrapez
 
 Declare Function DTGetIconsFile() As String
 Declare Sub DTSetIconsFile(ByVal sFile As String)
