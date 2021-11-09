@@ -22,6 +22,7 @@
 '	07-09-2020 15:32:35 2.40 Rebranded the tool to Precisely
 '	03-09-2021 08:04:52 2.50 Added a tool that can draw arrows along a polyline at a given width
 '						Added a tool that can draw rotated trapez
+'	09-11-2021 13:36:44	2.53 Recompiled with new libraries to remove Pitney Bowes brand
 '*******************************************************************************
 
 '-------------------------------------
@@ -33,7 +34,7 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"2.52"
+Define xVersion 		"2.53"
 Define xYear			"2021"
 Define xAddToMenuBar	FALSE
 
