@@ -191,7 +191,10 @@ OnError GoTo ErrorOccured
 			Dialog Preserve
 			Exit Sub
 		End If
-		mnArrowWidthPct(ARROW_END_HEAD) = nValue
+		mnArrowLengthPct(ARROW_END_HEAD) = nValue
+	Else
+		mnArrowWidthPct(ARROW_END_HEAD) = 100	'%, Same width as the buffer
+		mnArrowLengthPct(ARROW_END_HEAD) = 100	'%, Same width as the buffer
 	End If
 
 	'**Arrow Tail
@@ -214,7 +217,10 @@ OnError GoTo ErrorOccured
 			Dialog Preserve
 			Exit Sub
 		End If
-		mnArrowWidthPct(ARROW_END_TAIL) = nValue
+		mnArrowLengthPct(ARROW_END_TAIL) = nValue
+	Else
+		mnArrowWidthPct(ARROW_END_TAIL) = 100	'%, Same width as the buffer
+		mnArrowLengthPct(ARROW_END_TAIL) = 100	'%, Same width as the buffer
 	End If
 
 	Exit Sub

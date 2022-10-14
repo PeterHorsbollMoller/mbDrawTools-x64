@@ -4,25 +4,30 @@
 '** 	Modul:	DrawToolsMenu.mb
 '**
 '*******************************************************************************
-'	12-01-2011 14:07:37	1.01	Added extra tools:
-'						- Add new start node
-'						- Add new end node
-'						- Add node at either end or start, depends on which is closest
-'						- Remove start node
-'						- Remove end node
-'	12-01-2011 15:56:07	1.02	Added extra tool
-'						- combine selected into new object in editable layer
-'	13-09-2011 08:42:11	1.03	Added extra tool
-'						- add gaps into current editable table where clicked
-'	11-04-2013 09:51:29	1.04	Minor changes, mostly cosmetic to the source code
-'					2.00 Included support for running DrawTools on 64 bit
-'	19-01-2016 13:25:16 2.10 Improved the precision on the tools by specifying the coordinate system of the table to edit and not the map or no coordsys
-'	01-09-2018 23:27:18 2.20 Added a tool that lets you set the xy coordinate of a node of a selected object
-'	11-09-2018 07:36:31 2.30	Added a tool that can calculate angles between segments along a polyline or polygon
-'	07-09-2020 15:32:35 2.40 Rebranded the tool to Precisely
-'	03-09-2021 08:04:52 2.50 Added a tool that can draw arrows along a polyline at a given width
-'						Added a tool that can draw rotated trapez
-'	09-11-2021 13:36:44	2.53 Recompiled with new libraries to remove Pitney Bowes brand
+'	12-01-2011 14:07:37	1.01		Added extra tools:
+'							- Add new start node
+'							- Add new end node
+'							- Add node at either end or start, depends on which is closest
+'							- Remove start node
+'							- Remove end node
+'	12-01-2011 15:56:07	1.02		Added extra tool
+'							- combine selected into new object in editable layer
+'	13-09-2011 08:42:11	1.03		Added extra tool
+'							- add gaps into current editable table where clicked
+'	11-04-2013 09:51:29	1.04		Minor changes, mostly cosmetic to the source code
+'					2.00 	Included support for running DrawTools on 64 bit
+'	19-01-2016 13:25:16 2.10 	Improved the precision on the tools by specifying the coordinate system of the table to edit and not the map or no coordsys
+'	01-09-2018 23:27:18 2.20 	Added a tool that lets you set the xy coordinate of a node of a selected object
+'	11-09-2018 07:36:31 2.30		Added a tool that can calculate angles between segments along a polyline or polygon
+'	07-09-2020 15:32:35 2.40 	Rebranded the tool to Precisely
+'	03-09-2021 08:04:52 2.50 	Added a tool that can draw arrows along a polyline at a given width
+'							Added a tool that can draw rotated trapez
+'	09-11-2021 13:36:44	2.53 	Recompiled with new libraries to remove Pitney Bowes brand
+'	15-01-2022 23:17:45 2.60 	Added a tool to split a polygon into halfs using a baseline - not finished
+'	06/10/2022 13.47.23 2.7.1	Added functions for creating annullus and Circular Sector in Update statements as an example
+'							Added function for converting between math and north angles
+'							Added Help file (PDF)
+'							SetNodeCoordinate now also allows you to delete a node
 '*******************************************************************************
 
 '-------------------------------------
@@ -34,13 +39,14 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"2.53"
-Define xYear			"2021"
+Define xVersion 		"2.7.1"
+Define xYear			"2022"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".ini"
 Define FILE_DBG			ApplicationDirectory$() & xProgram & ".dbg"
 'Define FILE_DLL			ApplicationDirectory$() & xProgram & ".dll"
+Define FILE_HLP			ApplicationDirectory$() & xProgram & ".pdf"
 Define FILE_PAD			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".btp"
 
 '-------------------------------------
@@ -67,38 +73,21 @@ Declare Sub SelChangedHandler
 '**********************************************************************************************''
 Sub Main
 
+Dim	nResult As Logical
+
 OnError GoTo ErrorOccured
 
 	'***Initializing ApplicationInfo
 	Call PRGISetApplicationName(xProgram)
 	Call PRGISetApplicationVersion(xVersion)
 	Call PRGISetApplicationCopyrightYear(xYear)
+	Call PRGISetApplicationHelpFile(FILE_HLP)
 
-	Call PRGISetApplicationImageUri(ApplicationDirectory$() & "Images\IsocelesTrapez_32.png")
-	Call PRGISetDescription("This DrawTools applications holds a number of tools for modifying existing objects.")
+	Call PRGISetApplicationImageUri(ApplicationDirectory$() & "Images\IsoscelesTrapez_32.png")
+	Call PRGISetDescription("The DrawTools application holds a number of tools for modifying existing objects and creating new objects.")
 
 	'***Enabling Debug if file exists
 	Call DEBUGEnableByFile(FILE_DBG)
-
-'	Create Menu xProgramMenu As
-'		'""
-'		'	HelpMsg ""
-'		'	Calling ,
-'		'"(-",
-'		"End program"
-'			Calling EndProgram,
-'		"About..."
-'			Calling PRGIAboutbox
-
-'	If xAddToMenuBar Then
-'		'Remove the Window menu and Help menu
-'		Alter Menu Bar Remove ID 6, ID 7
-'		'Add the custom menu, then the Window & Help menus
-'		Alter Menu Bar Add xProgramMenu, ID 6, ID 7
-'	Else
-'		Alter Menu ID 4
-'			Add "(-", xProgramMenu  As xProgramMenu
-'	End If
 
 	Call DTSetIconsFile("")
 
@@ -109,6 +98,16 @@ OnError GoTo ErrorOccured
 		'**This MapInfo Pro is using the modern Ribbon based interface
 		Call DTAddToolsToRibbon
 	End If
+
+	nResult = RBNRegisterFunctionAsPublic("OBJDirection", "DTLineDirection", "Calculates the direction of a polyline, East is zero, counter-clockwise")
+	nResult = RBNRegisterFunctionAsPublic("OBJCreateTrapez", "DTCreateTrapez", "Creates a trapez using a starting point, direction, length, width at start and end, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
+	nResult = RBNRegisterFunctionAsPublic("OBJCreateTriangle", "DTCreateTriangle", "Creates a triangle using a starting point, direction, length, width, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
+	nResult = RBNRegisterFunctionAsPublic("OBJRemoveDuplicateNodes", "DTRemoveDuplicateNodes", "Removed duplicate nodes from input object using the given tolerance in meters")
+	nResult = RBNRegisterFunctionAsPublic("OBJCreateAnnulus", "DTCreateAnnulus", "Create an annulus using a point, direction and sizes.")
+	nResult = RBNRegisterFunctionAsPublic("OBJCreateCircularSector", "DTCreateCircularSector", "Create a circular sector using a point, direction and sizes.")
+	nResult = RBNRegisterFunctionAsPublic("OBJCartesianCreateArrow", "DTCartesianCreateArrow", "Create an arrow from a polyline giving size and end types.")
+	nResult = RBNRegisterFunctionAsPublic("MATHNorth2MathAngle", "DTNorth2MathAngle", "Converts a North angle to a Math angle.")
+	nResult = RBNRegisterFunctionAsPublic("MathMath2NorthAngle", "DTMath2NorthAngle", "Converts a Math angle to a North angle.")
 
 	Exit Sub
 '-------------------------

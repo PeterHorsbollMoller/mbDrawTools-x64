@@ -354,6 +354,20 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTPolylineRemoveEndNode")
 	End If
 
+'	nCtrlIdx = RBNSplitButtonGroupAddControl("DTSplitPolygonIntoHalf", "Split Polygon in Half", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+'	If nCtrlIdx > 0 Then
+'		'Create & Set the button tooltip
+'		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Split the selected polygon in half", "Make sure you have an editable layer in your map.")
+'		'Set the button icon
+'		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\IsoscelesTrapez_32.png")
+'		'Set DrawMode
+'		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+'		'Set Cursor
+'		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+'		'Set Custom MapBasic Handle to the button
+'		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTSplitPolygonIntoHalf")
+'	End If
+
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE		'SpatialCreateBar
 '	sSplitButtonName		= "NodesSplitButton"
@@ -375,20 +389,19 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawArrow")
 	End If
 
-	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawIsocelesTrapez", "Isoceles Trapezoid", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawIsoscelesTrapez", "Isosceles Trapezoid", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Isoceles Trapezoid using direction and size details", "Make sure you have an editable layer in your map.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Isosceles Trapezoid using direction and size details", "Make sure you have an editable layer in your map.")
 		'Set the button icon
-		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\IsocelesTrapez_32.png")
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\IsoscelesTrapez_32.png")
 		'Set DrawMode
 		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
 		'Set Cursor
 		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
 		'Set Custom MapBasic Handle to the button
-		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawIsocelesTrapez")
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawIsoscelesTrapez")
 	End If
-
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE
@@ -563,7 +576,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTDrawIsocelesTrapez", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
 
 		nWID		= FrontWindow()
 
@@ -619,7 +632,7 @@ OnError GoTo ErrorOccured
 					Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
-					Call RBNGroupEnableControls(  "", "", "DTDrawIsocelesTrapez", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
 				Else
 					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 						Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -932,9 +945,13 @@ OnError GoTo ErrorOccured
 
 	fTolerance	= 1	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
 	If not OBJFindSegmentAndNode(oExisting, oPoint, fTolerance, nSegment, nNode) Then
-		Note "Try to click a bit closer to the node you want to modify!"
-		Close Table SelectionInfo(SEL_INFO_SELNAME)
-		Exit Sub
+		fTolerance	= 10	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+		If not OBJFindSegmentAndNode(oExisting, oPoint, fTolerance, nSegment, nNode) Then
+
+			Note "Try to click a bit closer to the node you want to modify!"
+			Close Table SelectionInfo(SEL_INFO_SELNAME)
+			Exit Sub
+		End If
 	End If
 
 	If not DLGSetNodeCoordinate(oExisting, nSegment, nNode) Then
@@ -1170,74 +1187,79 @@ OnError GoTo ErrorOccured
 		Exit Sub
 	End If
 
-	oArrowLine = OBJRemoveDuplicateNodes(oDrawn, 0.5)	'meters
+	oArrow = OBJCartesianCreateArrow(oDrawn, 0.5, DLGAGetBufferResolution(), DLGAGetBufferWidth()
+								, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetArrowLengthPct(ARROW_END_HEAD)/100, DLGAGetArrowWidthPct(ARROW_END_HEAD)/100
+								, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetArrowLengthPct(ARROW_END_TAIL)/100, DLGAGetArrowWidthPct(ARROW_END_TAIL)/100)
 
-	'**Creating Arrow Head at the end of the line
-	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
-	fEndX		= ObjectNodeX(oArrowLine, 1, nNumNodes)
-	fEndY		= ObjectNodeY(oArrowLine, 1, nNumNodes)
 
-	oBuffer		= Buffer(CreatePoint(fEndX, fEndY), 20, DLGAGetBufferWidth(), "m")
-	oArrowLine	= Erase(oArrowLine, oBuffer)
-	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
-
-	Create Pline
-		Into Variable oLineEnd
-		0
-	Alter Object oLineEnd
-		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, nNumNodes), ObjectNodeY(oArrowLine, 1, nNumNodes))
-	Alter Object oLineEnd
-		Node Add Position 1, 2 (fEndX, fEndY)
-
-	Do Case DLGAGetArrowType(ARROW_END_HEAD)
-		Case ARROW_END_TYPE_ROUNDED
-			'Print "Arrow Head: Rounded"
-			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 3, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-			'oArrowLine	= Erase(oArrowLine, oArrowHead)
-		Case ARROW_END_TYPE_FLAT
-			'Print "Arrow Head: Flat"
-			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 2, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-			oArrowLine	= Erase(oArrowLine, oArrowHead)
-		Case ARROW_END_TYPE_ARROW
-			'Print "Arrow Head: Arrow"
-			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, 1, DLGAGetArrowWidth(ARROW_END_HEAD), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-			oArrowLine	= Erase(oArrowLine, oArrowHead)
-	End Case
-
-	'**Creating Arrow Tail at the start of the line
-	fStartX		= ObjectNodeX(oArrowLine, 1, 1)
-	fStartY		= ObjectNodeY(oArrowLine, 1, 1)
-
-	oBuffer		= Buffer(CreatePoint(fStartX, fStartY), 20, DLGAGetBufferWidth(), "m")
-	oArrowLine	= Erase(oArrowLine, oBuffer)
-
-	Create Pline
-		Into Variable oLineStart
-		0
-	Alter Object oLineStart
-		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, 1), ObjectNodeY(oArrowLine, 1, 1))
-	Alter Object oLineStart
-		Node Add Position 1, 2 (fStartX, fStartY)
-
-	Do Case DLGAGetArrowType(ARROW_END_TAIL)
-		Case ARROW_END_TYPE_ROUNDED
-			'Print "Arrow Tail: Rounded"
-			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 3, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-			'oArrowLine	= Erase(oArrowLine, oArrowTail)
-		Case ARROW_END_TYPE_FLAT
-			'Print "Arrow Tail: Flat"
-			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 2, DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-			oArrowLine	= Erase(oArrowLine, oArrowTail)
-		Case ARROW_END_TYPE_ARROW
-			'Print "Arrow Tail: Arrow"
-			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, 1, DLGAGetArrowWidth(ARROW_END_TAIL), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-			oArrowLine	= Erase(oArrowLine, oArrowTail)
-	End Case
-
-	oArrow		= Buffer(oArrowLine, 20, DLGAGetBufferWidth(), "m")
-
-	oArrow		= Combine(oArrow, oArrowHead)
-	oArrow		= Combine(oArrow, oArrowTail)
+'	oArrowLine = OBJRemoveDuplicateNodes(oDrawn, 0.5)	'meters
+'
+'	'**Creating Arrow Head at the end of the line
+'	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
+'	fEndX		= ObjectNodeX(oArrowLine, 1, nNumNodes)
+'	fEndY		= ObjectNodeY(oArrowLine, 1, nNumNodes)
+'
+'	oBuffer		= Buffer(CreatePoint(fEndX, fEndY), 20, DLGAGetBufferWidth(), "m")
+'	oArrowLine	= Erase(oArrowLine, oBuffer)
+'	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
+'
+'	Create Pline
+'		Into Variable oLineEnd
+'		0
+'	Alter Object oLineEnd
+'		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, nNumNodes), ObjectNodeY(oArrowLine, 1, nNumNodes))
+'	Alter Object oLineEnd
+'		Node Add Position 1, 2 (fEndX, fEndY)
+'
+'	Do Case DLGAGetArrowType(ARROW_END_HEAD)
+'		Case ARROW_END_TYPE_ROUNDED
+'			'Print "Arrow Head: Rounded"
+'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+'			'oArrowLine	= Erase(oArrowLine, oArrowHead)
+'		Case ARROW_END_TYPE_FLAT
+'			'Print "Arrow Head: Flat"
+'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+'			oArrowLine	= Erase(oArrowLine, oArrowHead)
+'		Case ARROW_END_TYPE_ARROW
+'			'Print "Arrow Head: Arrow"
+'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetArrowWidth(ARROW_END_HEAD), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
+'			oArrowLine	= Erase(oArrowLine, oArrowHead)
+'	End Case
+'
+'	'**Creating Arrow Tail at the start of the line
+'	fStartX		= ObjectNodeX(oArrowLine, 1, 1)
+'	fStartY		= ObjectNodeY(oArrowLine, 1, 1)
+'
+'	oBuffer		= Buffer(CreatePoint(fStartX, fStartY), 20, DLGAGetBufferWidth(), "m")
+'	oArrowLine	= Erase(oArrowLine, oBuffer)
+'
+'	Create Pline
+'		Into Variable oLineStart
+'		0
+'	Alter Object oLineStart
+'		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, 1), ObjectNodeY(oArrowLine, 1, 1))
+'	Alter Object oLineStart
+'		Node Add Position 1, 2 (fStartX, fStartY)
+'
+'	Do Case DLGAGetArrowType(ARROW_END_TAIL)
+'		Case ARROW_END_TYPE_ROUNDED
+'			'Print "Arrow Tail: Rounded"
+'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+'			'oArrowLine	= Erase(oArrowLine, oArrowTail)
+'		Case ARROW_END_TYPE_FLAT
+'			'Print "Arrow Tail: Flat"
+'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+'			oArrowLine	= Erase(oArrowLine, oArrowTail)
+'		Case ARROW_END_TYPE_ARROW
+'			'Print "Arrow Tail: Arrow"
+'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetArrowWidth(ARROW_END_TAIL), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
+'			oArrowLine	= Erase(oArrowLine, oArrowTail)
+'	End Case
+'
+'	oArrow		= Buffer(oArrowLine, 20, DLGAGetBufferWidth(), "m")
+'
+'	oArrow		= Combine(oArrow, oArrowHead)
+'	oArrow		= Combine(oArrow, oArrowTail)
 
 	Insert Into sTab (OBJ) Values (oArrow)
 
@@ -1254,7 +1276,7 @@ End Sub
 'Parameters:
 '
 '**********************************************************************************************''
-Sub DTDrawIsocelesTrapez
+Sub DTDrawIsoscelesTrapez
 
 Dim	nWID As Integer,
 	fStartX, fStartY, fEndX, fEndY, fDirection, fDistance As Float,
@@ -1307,7 +1329,168 @@ OnError GoTo ErrorOccured
 	Exit Sub
 '-------------------------
 ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "DTDrawIsocelesTrapez")
+	Call ERRCreate(Err(), Error$(), "DTDrawIsoscelesTrapez")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTSplitPolygonIntoHalf
+
+Dim	oPolygon, oSplitter, oBaseLine, oNode, oPoint1, oPoint2, oLine, arrLines() As Object,
+	nWID, nSegment, nNode, nCount, nLine As Integer,
+	fXFrom, fYFrom, fXTo, fYTo, fDirection, fDirectionPerp1, fDirectionPerp2, fDistance, fMaxLength As Float
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+'	Set CoordSys Window FrontWindow()
+	Set CoordSys Table Selection
+	fXFrom			= CommandInfo(CMD_INFO_X)
+	fYFrom			= CommandInfo(CMD_INFO_Y)
+	fXTo				= CommandInfo(CMD_INFO_X2)
+	fYTo				= CommandInfo(CMD_INFO_Y2)
+	fDirection		= MATHGetDirection(fXFrom, fYFrom, fXTo, fYTo)
+	fDirectionPerp1	= IIf(fDirection + 90 > 360, fDirection - 90, fDirection + 90)
+	fDirectionPerp2	= IIf(fDirectionPerp1 > 180, fDirectionPerp1 - 180, fDirectionPerp1 + 180)
+
+
+	Create Pline
+		Into Variable oBaseLine
+		2 (fXFrom, fYFrom) (fXTo, fYTo)
+
+	Print "Direction: " & fDirection
+	Print "Direction Perpedicular: " & fDirectionPerp1
+
+	Fetch First From Selection
+	oPolygon	= Selection.OBJ
+
+	Do Case ObjectInfo(oPolygon, OBJ_INFO_TYPE)
+		Case OBJ_TYPE_REGION
+			'**continue Please
+			If Not ObjectInfo(oPolygon, OBJ_INFO_NPOLYGONS) = 1 Then
+				Note "Please select a polygon object with just one segment to use this tool!"
+				Exit Sub
+			End If
+		Case Else
+			Note "Please select a polygon object to use this tool!"
+			Exit Sub
+	End Case
+
+	fMaxLength	= Maximum(
+					Distance(ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MINY), ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MAXY), "m")
+					, Distance(ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MINY), ObjectGeography(oPolygon, OBJ_GEO_MAXX), ObjectGeography(oPolygon, OBJ_GEO_MINY), "m")
+
+					) * 2
+
+	Print "Max Length: " & FormatNumber$(Round(fMaxLength, 0.01)) & " m"
+
+	oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, 0)
+	oPoint2	= OBJCartesianCreatePointAlong(oBaseLine, fDistance * -1, 0)
+
+	Create Pline
+		Into Variable oBaseLine
+		2 (CentroidX(oPoint1), CentroidY(oPoint1)) (CentroidX(oPoint2), CentroidY(oPoint2))
+		Pen MakePen(2, 3, RED)
+
+	Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
+		(OBJ)
+		Values (oBaseLine)
+
+	Create Pline
+		Into Variable oSplitter
+		0
+		Pen MakePen(2, 3, RED)
+
+	nSegment = 1
+'	For nSegment = 1 To ObjectInfo(oPolygon, OBJ_INFO_NPOLYGONS)
+		For nNode = 1 To ObjectInfo(oPolygon, OBJ_INFO_NPOLYGONS + nSegment)
+			Print "Node: " & FormatNumber$(nNode)
+			oNode 		= CreatePoint(ObjectNodeX(oPolygon, nSegment, nNode), ObjectNodeY(oPolygon, nSegment, nNode))
+
+'			oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength)
+'			oPoint2	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength * -1)
+'			oLine		= CartesianConnectObjects(oBaseLine, oNode, TRUE)
+
+			oPoint1	= CartesianOffset(oNode, fDirectionPerp1, fMaxLength, "m")
+			oPoint2	= CartesianOffset(oNode, fDirectionPerp2, fMaxLength, "m")
+
+			Create Pline
+				Into Variable oLine
+				2 (CentroidX(oPoint1), CentroidY(oPoint1)) (CentroidX(oPoint2), CentroidY(oPoint2))
+				Pen MakePen(2, 3, BLUE)
+
+			If oLine Intersects oPolygon Then
+				If CartesianObjectLen(Overlap(oLine, oPolygon), "m") > 0.0 Then
+				Print "  Length of perp line: " & FormatNumber$(Round(CartesianObjectLen(Overlap(oLine, oPolygon), "m"), 0.01))
+					Print "  Adding Line ..."
+					oLine	= Overlap(oLine, oPolygon)
+					Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
+						(OBJ)
+						Values (oLine)
+
+					nCount = nCount + 1
+					Redim arrLines(nCount)
+					arrLines(nCount) = oLine
+
+					Alter Object oSplitter
+						Node Add Position 1, nCount (CentroidX(oLine), CentroidY(oLine))
+				End If
+			End If
+		Next
+'	For Next
+
+'	For nLine = 0 To ((Int(fMaxLength) + 1) * 2) Step 1
+'
+'		fDistance	= nLine * 1.00
+'		Print "Distance: " & FormatNumber$(Round(fDistance, 0.01)) & " m"
+'		oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength)
+'		oPoint2	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength * -1)
+'
+'		Create Pline
+'			Into Variable oLine
+'			2 (CentroidX(oPoint1), CentroidY(oPoint1)) (CentroidX(oPoint2), CentroidY(oPoint2))
+'			Pen MakePen(2, 2, BLUE)
+'
+'		If oLine Intersects oPolygon Then
+'			Print "Adding Line ..."
+''			Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
+''				(OBJ)
+''				Values (oLine)
+'
+'			nCount = nCount + 1
+'			Redim arrLines(nCount)
+'			arrLines(nCount) = oLine
+'
+'			oLine	= Overlap(oLine, oPolygon)
+'			Alter Object oSplitter
+'				Node Add Position 1, nCount (CentroidX(oLine), CentroidY(oLine))
+'		End If
+'	Next
+
+	Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
+		(OBJ)
+		Values (oSplitter)
+
+	Close Table SelectionInfo(SEL_INFO_SELNAME)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTSplitPolygonIntoHalf")
 	Call ERRShow()
 
 End Sub

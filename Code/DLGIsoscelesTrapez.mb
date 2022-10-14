@@ -72,7 +72,7 @@ DLGIsoscelesTrapez = FALSE
 	End If
 
 	Dialog
-		Title "Isoceles Trapezoid"
+		Title "Isosceles Trapezoid"
 
 		Control StaticText	Position 5,5
 			Title "Initial location (X, Y)"
@@ -155,12 +155,12 @@ OnError GoTo ErrorOccured
 	mnCalculationMethod	= ReadControlValue(CTRL_LST_CALC_METHOD)
 	mbAddMidPointNode	= ReadControlValue(CTRL_CHK_MIDPOINTNODE)
 
-	If mfDirection < 0 Or mfDirection > 360 Then
-		Note "Please enter a direction between 0 and 360 degrees!"
-		Alter Control CTRL_TXT_DIRECTION Active
-		Dialog Preserve
-		Exit Sub
-	End If
+'	If mfDirection < 0 Or mfDirection > 360 Then
+'		Note "Please enter a direction between 0 and 360 degrees!"
+'		Alter Control CTRL_TXT_DIRECTION Active
+'		Dialog Preserve
+'		Exit Sub
+'	End If
 	If mfLength <= 0 Then
 		Note "Please enter a length larger than 0 meters!"
 		Alter Control CTRL_TXT_DIRECTION Active

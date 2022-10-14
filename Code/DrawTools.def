@@ -17,7 +17,9 @@ Declare Sub DTPolylineRemoveEndNode
 Declare Sub DTCombineIntoNew
 Declare Sub DTCreateGaps
 Declare Sub DTDrawArrow
-Declare Sub DTDrawIsocelesTrapez
+Declare Sub DTDrawIsoscelesTrapez
+Declare Sub DTSplitPolygonIntoHalf
+
 
 Declare Function DTGetIconsFile() As String
 Declare Sub DTSetIconsFile(ByVal sFile As String)

@@ -23,16 +23,18 @@ Declare Sub DLGSNCDialog_OnLoad
 Declare Sub DLGSNCOK_Clicked
 Declare Sub DLGSNCPrevNode_Clicked
 Declare Sub DLGSNCNextNode_Clicked
+Declare Sub DLGSNCDeleteNode_Clicked
 Declare Sub DLGSNCZoomIn_Clicked
 Declare Sub DLGSNCZoomOut_Clicked
 Declare Sub DLGSNCRefreshDialog
 Declare Sub DLGSNCRefreshObject
 
 Define	CTRL_LBL_SEGMENT_NODE		100
-Define	CTRL_CMD_PREV_NODE			200
-Define	CTRL_CMD_NEXT_NODE			210
-Define	CTRL_TXT_X				300
-Define	CTRL_TXT_Y				310
+Define	CTRL_CMD_DELETE_NODE		200
+Define	CTRL_CMD_PREV_NODE			310
+Define	CTRL_CMD_NEXT_NODE			310
+Define	CTRL_TXT_X				400
+Define	CTRL_TXT_Y				410
 
 Dim	mnSegment, mnNode, mnMID As Integer,
 	moInput, moPoint As Object,
@@ -68,6 +70,7 @@ DLGSetNodeCoordinate = FALSE
 		Info OBJ_INFO_PEN, mpenTemp
 
 	mnMID	= FrontWindow()
+	Call TABClose("__NODE__CHANGER")
 	Create Table __NODE__CHANGER
 		(ID Integer)
 		File TempFileName$("") Hide
@@ -92,8 +95,13 @@ DLGSetNodeCoordinate = FALSE
 		Calling DLGSNCDialog_OnLoad
 
 		Control StaticText		ID CTRL_LBL_SEGMENT_NODE
-			Position 5,7		Width 150
-			Title "Segment " & FormatNumber$(mnSegment) & " Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+			Position 5,7		Width 115
+			Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+
+		Control Button			ID CTRL_CMD_DELETE_NODE
+			Position 120,5		Width 30
+			Title "Delete"
+			Calling DLGSNCDeleteNode_Clicked
 
 		Control Button			ID CTRL_CMD_PREV_NODE
 			Position 160,5		Width 20
@@ -248,6 +256,65 @@ End Sub
 'Parameters:
 '
 '**********************************************************************************************''
+Sub DLGSNCDeleteNode_Clicked
+
+Dim	bFirstDeleted, bLastDeleted As Logical,
+	nNextNode As Integer
+
+OnError GoTo ErrorOccured
+
+	If ObjectInfo(moInput, OBJ_INFO_TYPE) = OBJ_TYPE_REGION Then
+		If mnNode = 1 Then
+			bFirstDeleted	= TRUE
+		ElseIf mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+			bLastDeleted 	= TRUE
+		End If
+	End If
+
+	Alter Object moInput
+		Node Remove Position mnSegment, mnNode
+
+	If bLastDeleted Then
+'		Alter Object moInput
+'			Node Remove Position mnSegment, 1
+		nNextNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	ElseIf bFirstDeleted Then
+'		Alter Object moInput
+'			Node Remove Position mnSegment, ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+		nNextNode = 1
+	Else
+		nNextNode = mnNode
+	End If
+
+	Alter Object moInput
+		Info OBJ_INFO_PEN, mpenTemp
+
+	Update __NODE__CHANGER
+		Set OBJ = moInput
+		Where ROWID = 1
+
+	mnSegment	= mnSegment
+	mnNode	= nNextNode
+	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCNextNode_Clicked")
+	Call ERRShow()
+
+End Sub
+
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
 Sub DLGSNCZoomIn_Clicked
 
 OnError GoTo ErrorOccured
@@ -297,7 +364,7 @@ OnError GoTo ErrorOccured
 	mfX	= ObjectNodeX(moInput, mnSegment, mnNode)
 	mfY	= ObjectNodeY(moInput, mnSegment, mnNode)
 
-	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
 '	Alter Control CTRL_TXT_X				Value FormatNumber$(mfX)
 	Alter Control CTRL_TXT_X				Value Format$(mfX, ",#.######")
 '	Alter Control CTRL_TXT_Y				Value FormatNumber$(mfY)
