@@ -1,6 +1,7 @@
 [LINK]
 Application=..\DrawTools x64\DrawTools.mbx
 Module=Library\ARRAYLib.mbo
+Module=Library\COLUMNLib.mbo
 Module=Library\CONFIGFILELib.mbo
 Module=Library\DATETIMELib.mbo
 Module=Library\DEBUGLib.mbo
@@ -9,6 +10,7 @@ Module=Library\ERRORLib.mbo
 Module=Library\MAPPERLib.mbo
 Module=Library\MATHLib.mbo
 Module=Library\OBJLib.mbo
+Module=Library\OBJECTMZLib.mbo
 Module=Library\ProgramInfo.mbo
 Module=Library\RESSTRNGLib.mbo
 Module=Library\RIBBONLib.mbo
@@ -21,3 +23,4 @@ Module=DrawTools.mbo
 Module=DLGArrow.mbo
 Module=DLGIsoscelesTrapez.mbo
 Module=DLGSetNodeCoordinate.mbo
+Module=DLGUpdateZMValues.mbo

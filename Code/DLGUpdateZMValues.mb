@@ -1,0 +1,600 @@
+﻿'*******************************************************************************
+'** 	Created By Peter HorsbÃ¸ll MÃ¸ller, Precisely
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\ARRAYLib.def"
+Include "Library\COLUMNLib.def"
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\MATHLib.def"
+Include "Library\TABLELib.def"
+
+Include "DLGUpdateZMValues.def"
+
+Declare Sub DLGUZMVDialog_OnLoad
+Declare Sub DLGUZMVDialog_ValueOrColumnZClicked
+Declare Sub DLGUZMVDialog_ValueOrColumnMClicked
+Declare Sub DLGUZMVDialog_UpdateZClicked
+Declare Sub DLGUZMVDialog_UpdateMClicked
+Declare Sub DLGUZMVDialog_OKClicked
+
+Define	CTRL_CHK_Z_UPDATE		100
+Define	CTRL_LST_Z_VALUE_OR_COL	105
+Define	CTRL_TXT_Z			110
+Define	CTRL_LST_Z_COLUMNS		112
+Define	CTRL_LST_Z_UPDATE_TYPE	120		'Set to, Add to, Multiply by
+Define	CTRL_CHK_M_UPDATE		200
+Define	CTRL_LST_M_VALUE_OR_COL	205
+Define	CTRL_TXT_M			210
+Define	CTRL_LST_M_COLUMNS		212
+Define	CTRL_LST_M_UPDATE_TYPE	220		'Set to, Add to, Multiply by
+
+Dim	marrColNames() As String,
+	mfZ, mfM As Float,
+	mnUpdateTypeZ, mnUpdateTypeM As Integer,
+	msColumnNameZ, msColumnNameM As String,
+	mbUpdateZ, mbUpdateM, mbUseColumnZ, mbUseColumnM As Logical
+'**********************************************************************************************''
+'Created by Peter HorsbÃ¸ll MÃ¸ller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGUpdateZMValues(	ByVal sTab As String) As Logical
+
+Dim	nNumCols As Integer
+
+OnError GoTo ErrorOccured
+
+DLGUpdateZMValues = FALSE
+
+	nNumCols = COLGetListOfNames(sTab, CRITERIA_USE_NUMERICAL, marrColNames)
+
+	Dialog
+		Title "Update ZM Values"
+		Calling DLGUZMVDialog_OnLoad
+
+		Control CheckBox	Position 5,5		ID CTRL_CHK_Z_UPDATE
+			Title "Update Z Values"
+			Value DLGUZMVUpdateValue(VALUE_TYPE_Z)
+			Calling DLGUZMVDialog_UpdateZClicked
+
+		Control RadioGroup	Position 5,22		ID CTRL_LST_Z_VALUE_OR_COL
+			Title "Value;Column"
+			Value(IIf(DLGUZMVUseColumn(VALUE_TYPE_Z), 2, 1))
+			Calling DLGUZMVDialog_ValueOrColumnZClicked
+
+		Control EditText	Position 55,20		ID CTRL_TXT_Z
+			Width 80
+			Value Format$(DLGUZMVGetValue(VALUE_TYPE_Z), ",0.000000")
+		Control PopupMenu	Position 55,34		ID CTRL_LST_Z_COLUMNS
+			Width 80
+			Title From Variable marrColNames
+
+		Control RadioGroup	Position 55,50		ID CTRL_LST_Z_UPDATE_TYPE
+			Title "Set to;Add to;Multiply by"
+			Value DLGUZMVGetUpdateType(VALUE_TYPE_Z)
+
+		'----------------------
+		Control CheckBox	Position 150,5		ID CTRL_CHK_M_UPDATE
+			Title "Update M Values"
+			Value DLGUZMVUpdateValue(VALUE_TYPE_M)
+			Calling DLGUZMVDialog_UpdateMClicked
+
+		Control RadioGroup	Position 150,22	ID CTRL_LST_M_VALUE_OR_COL
+			Title "Value;Column"
+			Value(IIf(DLGUZMVUseColumn(VALUE_TYPE_M), 2, 1))
+			Calling DLGUZMVDialog_ValueOrColumnMClicked
+
+		Control EditText	Position 200,20	ID CTRL_TXT_M
+			Width 80
+			Value Format$(DLGUZMVGetValue(VALUE_TYPE_M), ",0.000000")
+		Control PopupMenu	Position 200,34	ID CTRL_LST_M_COLUMNS
+			Width 80
+			Title From Variable marrColNames
+
+		Control RadioGroup	Position 200,50	ID CTRL_LST_M_UPDATE_TYPE
+			Title "Set to;Add to;Multiply by"
+			Value DLGUZMVGetUpdateType(VALUE_TYPE_M)
+
+		Control OKButton
+			Calling DLGUZMVDialog_OKClicked
+		Control CancelButton
+
+	If not CommandInfo(CMD_INFO_DLG_OK) Then
+		Exit Function
+	End If
+
+DLGUpdateZMValues = TRUE
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUpdateZMValues")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_OnLoad
+
+Dim	nItem As Integer
+
+OnError GoTo ErrorOccured
+
+	If Ubound(marrColNames) = 0 Then
+		Alter Control CTRL_LST_Z_VALUE_OR_COL Value 1
+		Alter Control CTRL_LST_Z_VALUE_OR_COL Disable
+		Alter Control CTRL_LST_M_VALUE_OR_COL Value 1
+		Alter Control CTRL_LST_M_VALUE_OR_COL Disable
+	Else
+		nItem	= ARRAYFindValueString(marrColNames, msColumnNameZ)
+		Alter Control CTRL_LST_Z_COLUMNS	Value IIf(nItem = 0, 1, nItem )
+		nItem	= ARRAYFindValueString(marrColNames, msColumnNameM)
+		Alter Control CTRL_LST_M_COLUMNS	Value IIf(nItem = 0, 1, nItem )
+	End If
+
+	Call DLGUZMVDialog_UpdateZClicked
+	Call DLGUZMVDialog_UpdateMClicked
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_OnLoad")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_ValueOrColumnZClicked
+
+OnError GoTo ErrorOccured
+
+	If Not ReadControlValue(CTRL_CHK_Z_UPDATE) Then
+		Exit Sub
+	End If
+
+	If ReadControlValue(CTRL_LST_Z_VALUE_OR_COL) = 1 Then
+		Alter Control CTRL_LST_Z_COLUMNS		Disable
+		Alter Control CTRL_TXT_Z				Enable
+	Else
+		Alter Control CTRL_LST_Z_COLUMNS		Enable
+		Alter Control CTRL_TXT_Z				Disable
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_UpdateZClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_ValueOrColumnMClicked
+
+OnError GoTo ErrorOccured
+
+	If Not ReadControlValue(CTRL_CHK_M_UPDATE) Then
+		Exit Sub
+	End If
+
+	If ReadControlValue(CTRL_LST_M_VALUE_OR_COL) = 1 Then
+		Alter Control CTRL_LST_M_COLUMNS		Disable
+		Alter Control CTRL_TXT_M				Enable
+	Else
+		Alter Control CTRL_LST_M_COLUMNS		Enable
+		Alter Control CTRL_TXT_M				Disable
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_UpdateMClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_UpdateZClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_CHK_Z_UPDATE) Then
+		Alter Control CTRL_LST_Z_VALUE_OR_COL	Enable
+		Alter Control CTRL_LST_Z_UPDATE_TYPE	Enable
+	Else
+		Alter Control CTRL_LST_Z_VALUE_OR_COL	Disable
+		Alter Control CTRL_LST_Z_UPDATE_TYPE	Disable
+		Alter Control CTRL_TXT_Z				Disable
+		Alter Control CTRL_LST_Z_COLUMNS		Disable
+	End If
+
+	Call DLGUZMVDialog_ValueOrColumnZClicked
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_UpdateZClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_UpdateMClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_CHK_M_UPDATE) Then
+		Alter Control CTRL_LST_M_VALUE_OR_COL	Enable
+		Alter Control CTRL_LST_M_UPDATE_TYPE	Enable
+	Else
+		Alter Control CTRL_LST_M_VALUE_OR_COL	Disable
+		Alter Control CTRL_LST_M_UPDATE_TYPE	Disable
+		Alter Control CTRL_TXT_M				Disable
+		Alter Control CTRL_LST_M_COLUMNS		Disable
+	End If
+
+	Call DLGUZMVDialog_ValueOrColumnMClicked
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_UpdateMClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGUZMVDialog_OKClicked
+
+Dim	sZ, sM As String
+
+OnError GoTo ErrorOccured
+
+	sZ			= ReadControlValue(CTRL_TXT_Z)
+	sM			= ReadControlValue(CTRL_TXT_M)
+
+	mnUpdateTypeZ	= ReadControlValue(CTRL_LST_Z_UPDATE_TYPE)
+	mnUpdateTypeM 	= ReadControlValue(CTRL_LST_M_UPDATE_TYPE)
+	mbUpdateZ		= ReadControlValue(CTRL_CHK_Z_UPDATE)
+	mbUpdateM		= ReadControlValue(CTRL_CHK_M_UPDATE)
+
+	mbUseColumnZ	= (ReadControlValue(CTRL_LST_Z_VALUE_OR_COL) = 2)
+	mbUseColumnM	= (ReadControlValue(CTRL_LST_M_VALUE_OR_COL) = 2)
+
+	If Not mbUpdateZ And Not mbUpdateM Then
+		Note "Please choose to update either Z or M, or both!"
+		Dialog Preserve
+		Exit Sub
+	End If
+
+	If mbUpdateZ Then
+		If mbUseColumnZ Then
+			If ReadControlValue(CTRL_LST_Z_COLUMNS) = 0 Then
+				Note "Please select a column with the Z value"
+				Dialog Preserve
+				Exit Sub
+			End If
+			msColumnNameZ	= marrColNames(ReadControlValue(CTRL_LST_Z_COLUMNS))
+		Else
+			If sZ = "" Then
+				Note "Please enter a numeric value for the Z value"
+				Dialog Preserve
+				Exit Sub
+			End If
+		End If
+	End If
+
+	If mbUpdateM Then
+		If mbUseColumnM Then
+			If ReadControlValue(CTRL_LST_M_COLUMNS) = 0 Then
+				Note "Please select a column with the M value"
+				Dialog Preserve
+				Exit Sub
+			End If
+			msColumnNameM	= marrColNames(ReadControlValue(CTRL_LST_M_COLUMNS))
+		Else
+			If sM = "" Then
+				Note "Please enter a numeric value for the M value"
+				Dialog Preserve
+				Exit Sub
+			End If
+		End If
+	End If
+
+	mfZ	= DeformatNumber$(sZ)
+	mfM	= DeformatNumber$(sM)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVDialog_OKClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+' Property: Z
+'**********************************************************************************************''
+Sub DLGUZMVSetZ(ByVal fValue As Float)
+
+OnError GoTo ErrorOccured
+
+	mfZ = fValue
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetZ")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVGetZ() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGUZMVGetZ = mfZ
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVGetZ")
+
+End Function
+
+'**********************************************************************************************''
+' Property: M
+'**********************************************************************************************''
+Sub DLGUZMVSetM(ByVal fValue As Float)
+
+OnError GoTo ErrorOccured
+
+	mfM = fValue
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetM")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVGetM() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGUZMVGetM = mfM
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVGetM")
+
+End Function
+
+'**********************************************************************************************''
+' Property: M
+'**********************************************************************************************''
+Sub DLGUZMVSetValue(  ByVal nZorM As Integer
+				, ByVal fValue As Float)
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		mfZ	= fValue
+	Else
+		mfM	= fValue
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetUpdate")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVGetValue(  ByVal nZorM As Integer
+					) As Float
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		DLGUZMVGetValue	= mfZ
+	Else
+		DLGUZMVGetValue	= mfM
+	End If
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVGetValue")
+
+End Function
+
+'**********************************************************************************************''
+' Property Column Name
+'**********************************************************************************************''
+Sub DLGUZMVSetColumnName(  ByVal nZorM As Integer
+					, ByVal sColumnName As String)
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		msColumnNameZ	= sColumnName
+	Else
+		msColumnNameM	= sColumnName
+	End If
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetColumnName")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVGetColumnName(  ByVal nZorM As Integer
+						) As String
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		DLGUZMVGetColumnName	= msColumnNameZ
+	Else
+		DLGUZMVGetColumnName	= msColumnNameM
+	End If
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVGetColumnName")
+
+End Function
+
+'**********************************************************************************************''
+' Property Column Name
+'**********************************************************************************************''
+Sub DLGUZMVSetUseColumn(  ByVal nZorM As Integer
+					, ByVal bUseColumn As Logical)
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		mbUseColumnZ	= bUseColumn
+	Else
+		mbUseColumnM	= bUseColumn
+	End If
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetUseColumn")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVUseColumn(  ByVal nZorM As Integer
+					) As Logical
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		DLGUZMVUseColumn	= mbUseColumnZ
+	Else
+		DLGUZMVUseColumn	= mbUseColumnM
+	End If
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVUseColumn")
+
+End Function
+
+
+'**********************************************************************************************''
+' Property: M
+'**********************************************************************************************''
+Sub DLGUZMVSetUpdateType(  ByVal nZorM As Integer
+					, ByVal nUpdateType As Integer)
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		mnUpdateTypeZ	= nUpdateType
+	Else
+		mnUpdateTypeM	= nUpdateType
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetUpdateType")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVGetUpdateType(  ByVal nZorM As Integer
+						) As Integer
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		If mnUpdateTypeZ = 0 Then
+			mnUpdateTypeZ = 1
+		End If
+		DLGUZMVGetUpdateType	= mnUpdateTypeZ
+	Else
+		If mnUpdateTypeM = 0 Then
+			mnUpdateTypeM = 1
+		End If
+		DLGUZMVGetUpdateType	= mnUpdateTypeM
+	End If
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVGetUpdateType")
+
+End Function
+
+'**********************************************************************************************''
+' Property: M
+'**********************************************************************************************''
+Sub DLGUZMVSetUpdateValue( ByVal nZorM As Integer
+				, ByVal nUpdateType As Integer)
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		mbUpdateZ	= nUpdateType
+	Else
+		mbUpdateM	= nUpdateType
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVSetUpdateValue")
+
+End Sub
+'**********************************************************************************************''
+Function DLGUZMVUpdateValue(  ByVal nZorM As Integer
+						) As Logical
+
+OnError GoTo ErrorOccured
+
+	If nZorM = VALUE_TYPE_Z Then
+		DLGUZMVUpdateValue	= mbUpdateZ
+	Else
+		DLGUZMVUpdateValue	= mbUpdateM
+	End If
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGUZMVUpdateValue")
+
+End Function

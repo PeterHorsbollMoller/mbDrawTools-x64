@@ -1,4 +1,5 @@
 Declare Function DLGSetNodeCoordinate(	  oInput As Object			'**Object to change the nodes of, changed object will also be returned via the variable
 								, ByVal nSegment As Integer	'**Default segment of the object
 								, ByVal nNode As Integer		'**Default node of the object to change
+								, ByVal bSupportMZ As Logical	'**Determines if the table for object supports MZ values
 								) As Logical				'**Returns TRUE if the user clicked OK to the dialog, else FALSE

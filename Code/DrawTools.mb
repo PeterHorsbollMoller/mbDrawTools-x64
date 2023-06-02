@@ -23,6 +23,7 @@ Include "Library\ERRORLib.def"
 Include "Library\MAPPERLib.def"
 Include "Library\MATHLib.def"
 Include "Library\OBJLib.def"
+Include "Library\OBJECTMZLib.def"
 Include "Library\ProgramInfo.def"
 Include "Library\RIBBONLib.def"
 Include "Library\TABLELib.def"
@@ -32,6 +33,7 @@ Include "DrawTools.def"
 Include "DLGIsoscelesTrapez.def"
 Include "DLGArrow.def"
 Include "DLGSetNodeCoordinate.def"
+Include "DLGUpdateZMValues.def"
 
 Dim	msIconsFile As String
 '**********************************************************************************************''
@@ -281,6 +283,17 @@ OnError GoTo ErrorOccured
 
 '	nCtrlIdx = RBNSplitButtonGroupAddControl("sepNodesSplitButton", "", "", ControlType_ContextMenuSeparator, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTUpdateZMOnSelection", "Update ZM Values", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Update Z and M values on selected bojects.", "Make sure you have selected objects from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\UpdateZM_64.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTUpdateZMValuesOnSelection")
+	End If
+
+
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddNode", "Add Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
@@ -492,109 +505,53 @@ Dim	nWID, nEditLayerID As Integer
 
 OnError GoTo ErrorOccured
 
-	If SystemInfo(SYS_INFO_MAPINFO_INTERFACE) = MIINTERFACE_CLASSICMENU Then
-		Alter Button DTRegionAdd 			Enable
-		Alter Button DTRegionRemove			Enable
-		Alter Button DTPolylineAddNode		Enable
-		Alter Button DTPolylineAddStartNode	Enable
-		Alter Button DTPolylineAddEndNode		Enable
-		Alter Button DTPolylineRemoveStartNode	Enable
-		Alter Button DTPolylineRemoveEndNode	Enable
-		Alter Button DTCombineIntoNew			Enable
-		Alter Button DTCreateGaps			Enable
+	Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", TRUE)
 
-		nWID		= FrontWindow()
+	nWID		= FrontWindow()
 
-		If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
-			Alter Button DTRegionAdd 			Disable
-			Alter Button DTRegionRemove			Disable
-			Alter Button DTPolylineAddNode		Disable
-			Alter Button DTPolylineAddStartNode	Disable
-			Alter Button DTPolylineAddEndNode		Disable
-			Alter Button DTPolylineRemoveStartNode	Disable
-			Alter Button DTPolylineRemoveEndNode	Disable
-		End If
-		If SelectionInfo(SEL_INFO_NROWS) < 2 Then
-			Alter Button DTCombineIntoNew			Disable
-		End If
+	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+	End If
+	If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
+		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+	End If
+	If SelectionInfo(SEL_INFO_NROWS) < 2 Then
+		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+	End If
 
-		If nWID = 0 Then
-			Alter Button DTRegionAdd 			Disable
-			Alter Button DTRegionRemove			Disable
-			Alter Button DTPolylineAddNode		Disable
-			Alter Button DTPolylineAddStartNode	Disable
-			Alter Button DTPolylineAddEndNode		Disable
-			Alter Button DTPolylineRemoveStartNode	Disable
-			Alter Button DTPolylineRemoveEndNode	Disable
-			Alter Button DTCombineIntoNew			Disable
-			Alter Button DTCreateGaps			Disable
-		Else
-			If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
-				Alter Button DTRegionAdd 			Disable
-				Alter Button DTRegionRemove			Disable
-				Alter Button DTPolylineAddNode		Disable
-				Alter Button DTPolylineAddStartNode	Disable
-				Alter Button DTPolylineAddEndNode		Disable
-				Alter Button DTPolylineRemoveStartNode	Disable
-				Alter Button DTPolylineRemoveEndNode	Disable
-				Alter Button DTCombineIntoNew			Disable
-				Alter Button DTCreateGaps			Disable
-			Else
-
-				nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
-				If nEditLayerID < 1 Then
-					Alter Button DTRegionAdd 			Disable
-					Alter Button DTRegionRemove			Disable
-					Alter Button DTPolylineAddNode		Disable
-					Alter Button DTPolylineAddStartNode	Disable
-					Alter Button DTPolylineAddEndNode		Disable
-					Alter Button DTPolylineRemoveStartNode	Disable
-					Alter Button DTPolylineRemoveEndNode	Disable
-					Alter Button DTCreateGaps			Disable
-				Else
-					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
-						Alter Button DTRegionAdd 			Disable
-						Alter Button DTRegionRemove			Disable
-						Alter Button DTPolylineAddNode		Disable
-						Alter Button DTPolylineAddStartNode	Disable
-						Alter Button DTPolylineAddEndNode		Disable
-						Alter Button DTPolylineRemoveStartNode	Disable
-						Alter Button DTPolylineRemoveEndNode	Disable
-					End If
-				End If
-			End If
-		End If
+	If nWID = 0 Then
+		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 	Else
-		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
-		Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
-
-		nWID		= FrontWindow()
-
-		If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
-			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
-			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
-		End If
-		If SelectionInfo(SEL_INFO_NROWS) < 2 Then
-			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
-		End If
-
-		If nWID = 0 Then
+		If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
 			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
@@ -605,8 +562,10 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Else
-			If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
+			nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
+			If nEditLayerID < 1 Then
 				Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
@@ -617,10 +576,11 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 			Else
-
-				nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
-				If nEditLayerID < 1 Then
+				If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 					Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
@@ -629,21 +589,7 @@ OnError GoTo ErrorOccured
 					Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
-					Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
-					Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
-					Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
-					Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
-				Else
-					If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
-						Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
-						Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
-					End If
+					Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 				End If
 			End If
 		End If
@@ -737,6 +683,7 @@ OnError GoTo ErrorOccured
 '-------------------------
 ErrorOccured:
 	Call ERRCreate(Err(), Error$(), "DTRegionRemove")
+
 	Call ERRShow()
 
 End Sub
@@ -922,7 +869,8 @@ Sub DTNodeSetCoordinate
 
 Dim	oExisting, oPoint As Object,
 	nSegment, nNode As Integer,
-	fX, fY, fTolerance As Float
+	fX, fY, fTolerance As Float,
+	sBaseTab As String
 
 OnError GoTo ErrorOccured
 
@@ -954,7 +902,8 @@ OnError GoTo ErrorOccured
 		End If
 	End If
 
-	If not DLGSetNodeCoordinate(oExisting, nSegment, nNode) Then
+	sBaseTab	= SelectionInfo(SEL_INFO_TABLENAME)
+	If not DLGSetNodeCoordinate(oExisting, nSegment, nNode, TableInfo(sBaseTab, TAB_INFO_SUPPORT_MZ)) Then
 		Close Table SelectionInfo(SEL_INFO_SELNAME)
 		Exit Sub
 	End If
@@ -968,6 +917,145 @@ OnError GoTo ErrorOccured
 '-------------------------
 ErrorOccured:
 	Call ERRCreate(Err(), Error$(), "DTNodeSetCoordinate")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTUpdateZMValuesOnSelection
+
+Dim	sQuery As String,
+	aObj, aROWID, aValue, aValueZ, aValueM As Alias,
+	fValueZ, fValueM As Float,
+	oInput As Object,
+	nROWID, nUpdateTypeZ, nUpdateTypeM As Integer
+
+OnError GoTo ErrorOccured
+
+	If SystemInfo(SYS_INFO_MIVERSION) < 2300 Then
+		Note "This only works with MapInfo v2023 or newer!"
+		Exit Sub
+	End If
+
+	sQuery	= SelectionInfo(SEL_INFO_SELNAME)
+	If Not TableInfo(SelectionInfo(SEL_INFO_TABLENAME), TAB_INFO_SUPPORT_MZ) Then
+		Note "Please select records from a table that support MZ values."
+		Close Table sQuery
+		Exit Sub
+	End If
+
+	If Not DLGUpdateZMValues(sQuery) Then
+		Close Table sQuery
+		Exit Sub
+	End If
+
+
+	aObj		= sQuery & ".OBJ"
+	aROWID	= sQuery & ".ROWID"
+
+'	If DLGUZMVUseColumn(VALUE_TYPE_Z) Then
+'		aValueZ	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_Z)
+'	End If
+'	If DLGUZMVUseColumn(VALUE_TYPE_M) Then
+'		aValueM	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_M)
+'	End If
+
+	If DLGUZMVUpdateValue(VALUE_TYPE_Z) And DLGUZMVUpdateValue(VALUE_TYPE_M) Then
+		Call DEBUGPrint("Updating M & Z")
+		nUpdateTypeZ	= DLGUZMVGetUpdateType(VALUE_TYPE_Z)
+		nUpdateTypeM	= DLGUZMVGetUpdateType(VALUE_TYPE_M)
+
+		If DLGUZMVUseColumn(VALUE_TYPE_Z) And DLGUZMVUseColumn(VALUE_TYPE_M) Then
+			aValueZ	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_Z)
+			aValueM	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_M)
+
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMZValues(aObj, aValueZ, nUpdateTypeZ, aValueM, nUpdateTypeM)
+		ElseIf DLGUZMVUseColumn(VALUE_TYPE_M) Then
+			fValueZ	= DLGUZMVGetValue(VALUE_TYPE_Z)
+			aValueM	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_M)
+
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMZValues(aObj, fValueZ, nUpdateTypeZ, aValueM, nUpdateTypeM)
+		ElseIf DLGUZMVUseColumn(VALUE_TYPE_Z) Then
+			aValueZ	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_Z)
+			fValueM	= DLGUZMVGetValue(VALUE_TYPE_M)
+
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMZValues(aObj, aValueZ, nUpdateTypeZ, fValueM, nUpdateTypeM)
+		Else
+			fValueZ	= DLGUZMVGetValue(VALUE_TYPE_Z)
+			fValueM	= DLGUZMVGetValue(VALUE_TYPE_M)
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMZValues(aObj, fValueZ, nUpdateTypeZ, fValueM, nUpdateTypeM)
+		End If
+
+	ElseIf DLGUZMVUpdateValue(VALUE_TYPE_M) Then
+		Call DEBUGPrint("Updating M only")
+		nUpdateTypeM	= DLGUZMVGetUpdateType(VALUE_TYPE_M)
+
+		If DLGUZMVUseColumn(VALUE_TYPE_M) Then
+			aValueM	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_M)
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMValues(aObj, aValueM, nUpdateTypeM)
+		Else
+			fValueM	= DLGUZMVGetValue(VALUE_TYPE_M)
+			Update sQuery
+				Set		OBJ = OBJMZUpdateMValues(aObj, fValueM, nUpdateTypeM)
+		End If
+
+	ElseIf DLGUZMVUpdateValue(VALUE_TYPE_Z) Then
+		Call DEBUGPrint("Updating Z only")
+		nUpdateTypeZ	= DLGUZMVGetUpdateType(VALUE_TYPE_Z)
+
+		If DLGUZMVUseColumn(VALUE_TYPE_Z) Then
+			aValueZ	= sQuery & "." & DLGUZMVGetColumnName(VALUE_TYPE_Z)
+			Update sQuery
+				Set		OBJ = OBJMZUpdateZValues(aObj, aValueZ, nUpdateTypeZ)
+		Else
+			fValueZ	= DLGUZMVGetValue(VALUE_TYPE_Z)
+			Update sQuery
+				Set		OBJ = OBJMZUpdateZValues(aObj, fValueZ, nUpdateTypeZ)
+		End If
+	End If
+
+
+'	Fetch First From sQuery
+'	Do Until EOT(sQuery)
+'		nROWID 	= aROWID
+'		oInput	= aObj
+'
+'		If DLGUZMVUseColumn(VALUE_TYPE_Z) Then
+'			fValueZ	= aValueZ
+'		Else
+'			fValueZ	= DLGUZMVGetValue(VALUE_TYPE_Z)
+'		End If
+'		If DLGUZMVUseColumn(VALUE_TYPE_M) Then
+'			fValueM	= aValueM
+'		Else
+'			fValueM	= DLGUZMVGetValue(VALUE_TYPE_M)
+'		End If
+'		Print "Update Object with Z Value " & Formatnumber$(fValueZ)
+'
+''		oInput = OBJMZUpdateZMValues(oInput, DLGUZMVGetValue(VALUE_TYPE_Z), DLGUZMVGetUpdateType(VALUE_TYPE_Z), DLGUZMVGetValue(VALUE_TYPE_M), DLGUZMVGetUpdateType(VALUE_TYPE_M))
+'		oInput = OBJMZUpdateZValues(oInput, fValueZ, DLGUZMVGetUpdateType(VALUE_TYPE_Z))
+'		Update sQuery
+'			Set		OBJ = oInput
+'			Where	ROWID = nROWID
+'
+'		Fetch Next From sQuery
+'	Loop
+
+	Close Table sQuery
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMValuesOnSelection")
 	Call ERRShow()
 
 End Sub

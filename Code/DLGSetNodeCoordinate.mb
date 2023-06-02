@@ -15,6 +15,8 @@ Include "Library\Defaults.def"
 '-------------------------------------
 Include "Library\DEBUGLib.def"
 Include "Library\ERRORLib.def"
+Include "Library\MATHLib.def"
+Include "Library\OBJECTMZLib.def"
 Include "Library\TABLELib.def"
 
 Include "DLGSetNodeCoordinate.def"
@@ -35,12 +37,17 @@ Define	CTRL_CMD_PREV_NODE			310
 Define	CTRL_CMD_NEXT_NODE			310
 Define	CTRL_TXT_X				400
 Define	CTRL_TXT_Y				410
+Define	CTRL_TXT_Z				420
+Define	CTRL_CHK_Z				421
+Define	CTRL_TXT_M				430
+Define	CTRL_CHK_M				431
 
 Dim	mnSegment, mnNode, mnMID As Integer,
 	moInput, moPoint As Object,
-	mfX, mfY As Float,
+	mfX, mfY, mfZ, mfM As Float,
 	mpenTemp, mpenOrig As Pen,
-	msymTemp As Symbol
+	msymTemp As Symbol,
+	mbSupportMZ As Integer
 
 '**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
@@ -52,19 +59,23 @@ Dim	mnSegment, mnNode, mnMID As Integer,
 Function DLGSetNodeCoordinate( oInput As Object			'**Object to change the nodes of, changed object will also be returned via the variable
 						, ByVal nSegment As Integer	'**Default segment of the object
 						, ByVal nNode As Integer		'**Default node of the object to change
+						, ByVal bSupportMZ As Logical	'**Determines if the table for object supports MZ values
 						) As Logical				'**Returns TRUE if the user clicked OK to the dialog, else FALSE
+
+Dim	sCsys As String
 
 OnError GoTo ErrorOccured
 
 DLGSetNodeCoordinate = FALSE
 
-	mnSegment	= nSegment
-	mnNode	= nNode
-	moInput	= oInput
+	mnSegment		= nSegment
+	mnNode		= nNode
+	moInput		= oInput
+	mbSupportMZ	= bSupportMZ
 
-	mpenTemp	= MakePen (4, 3, 16711935)
-	mpenOrig	= objectInfo(moInput, OBJ_INFO_PEN)
-	msymTemp	= MakeFontSymbol(60,9445631,20,"MapInfo Symbols",256,0)
+	mpenTemp		= MakePen (4, 3, 16711935)
+	mpenOrig		= objectInfo(moInput, OBJ_INFO_PEN)
+	msymTemp		= MakeFontSymbol(60,9445631,20,"MapInfo Symbols",256,0)
 
 	Alter Object moInput
 		Info OBJ_INFO_PEN, mpenTemp
@@ -74,8 +85,13 @@ DLGSetNodeCoordinate = FALSE
 	Create Table __NODE__CHANGER
 		(ID Integer)
 		File TempFileName$("") Hide
-	Create Map For __NODE__CHANGER
-		Using SelectionInfo(SEL_INFO_TABLENAME)
+	If SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
+		sCsys = TableInfo(SelectionInfo(SEL_INFO_TABLENAME), TAB_INFO_COORDSYS_CLAUSE)
+		Run Command "Create Map For __NODE__CHANGER " & sCsys & "SupportMZ"
+	Else
+		Create Map For __NODE__CHANGER
+			Using SelectionInfo(SEL_INFO_TABLENAME)
+	End If
 	Create Point
 		Into Variable moPoint
 		(ObjectNodeX(moInput, mnSegment, mnNode), ObjectNodeY(moInput, mnSegment, mnNode))
@@ -123,21 +139,33 @@ DLGSetNodeCoordinate = FALSE
 		Control EditText		ID CTRL_TXT_Y
 			Position 110,35		Width 95
 
+		Control CheckBox		ID CTRL_CHK_Z
+			Position 5,55
+			Title "&Z:"
+		Control EditText		ID CTRL_TXT_Z
+			Position 5,65		Width 95
+
+		Control CheckBox		ID CTRL_CHK_M
+			Position 110,55
+			Title "&M:"
+		Control EditText		ID CTRL_TXT_M
+			Position 110,65		Width 95
+
 		Control Button
-			Position 5,55		Width 40
+			Position 5,85		Width 40
 			Title "Zoom &In"
 			Calling DLGSNCZoomIn_Clicked
 		Control Button
-			Position 50,55		Width 40
+			Position 50,85		Width 40
 			Title "Zoom &Out"
 			Calling DLGSNCZoomOut_Clicked
 
 		Control OKButton
-			Position 120,55		Width 40
+			Position 120,85		Width 40
 			Title "Save"
 			Calling DLGSNCOK_Clicked
 		Control CancelButton
-			Position 165,55	Width 40
+			Position 165,85	Width 40
 
 	If not CommandInfo(CMD_INFO_DLG_OK) Then
 		Drop Table __NODE__CHANGER
@@ -167,6 +195,18 @@ End Function
 Sub DLGSNCDialog_OnLoad
 
 OnError GoTo ErrorOccured
+
+	If mbSupportMZ And SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
+		Alter Control CTRL_CHK_Z	Enable
+		Alter Control CTRL_TXT_Z	Enable
+		Alter Control CTRL_CHK_M	Enable
+		Alter Control CTRL_TXT_M	Enable
+	Else
+		Alter Control CTRL_CHK_Z	Disable
+		Alter Control CTRL_TXT_Z	Disable
+		Alter Control CTRL_CHK_M	Disable
+		Alter Control CTRL_TXT_M	Disable
+	End If
 
 	Call DLGSNCRefreshDialog
 
@@ -363,17 +403,43 @@ OnError GoTo ErrorOccured
 
 	mfX	= ObjectNodeX(moInput, mnSegment, mnNode)
 	mfY	= ObjectNodeY(moInput, mnSegment, mnNode)
+	If mbSupportMZ Then
+		If ObjectInfo(moInput, OBJ_INFO_HAS_Z) Then
+			Alter Control CTRL_CHK_Z	Value TRUE
+			Alter Control CTRL_CHK_Z	Disable
+			mfZ	= ObjectNodeZ(moInput, mnSegment, mnNode)
+		Else
+			Alter Control CTRL_CHK_Z	Value FALSE
+			Alter Control CTRL_CHK_Z	Enable
+			mfZ	= 0.00
+		End If
+		If ObjectInfo(moInput, OBJ_INFO_HAS_M) Then
+			Alter Control CTRL_CHK_M	Value TRUE
+			Alter Control CTRL_CHK_M	Disable
+			mfM	= ObjectNodeM(moInput, mnSegment, mnNode)
+		Else
+			Alter Control CTRL_CHK_M	Value FALSE
+			Alter Control CTRL_CHK_M	Enable
+			mfM	= 0.00
+		End If
+	End If
 
 	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
 '	Alter Control CTRL_TXT_X				Value FormatNumber$(mfX)
-	Alter Control CTRL_TXT_X				Value Format$(mfX, ",#.######")
+	Alter Control CTRL_TXT_X				Value Format$(mfX, ",0.000000")
 '	Alter Control CTRL_TXT_Y				Value FormatNumber$(mfY)
-	Alter Control CTRL_TXT_Y				Value Format$(mfY, ",#.######")
+	Alter Control CTRL_TXT_Y				Value Format$(mfY, ",0.000000")
+
+	If mbSupportMZ Then
+		Alter Control CTRL_TXT_Z			Value Format$(mfZ, ",0.000000")
+		Alter Control CTRL_TXT_M			Value Format$(mfM, ",0.000000")
+	End If
+
 
 	Alter Object moPoint
-		Geography OBJ_GEO_POINTX , mfX
+		Geography OBJ_GEO_POINTX, mfX
 	Alter Object moPoint
-		Geography OBJ_GEO_POINTY , mfY
+		Geography OBJ_GEO_POINTY, mfY
 	Alter Object moPoint
 		Info OBJ_INFO_SYMBOL, msymTemp
 
@@ -400,13 +466,18 @@ End Sub
 '**********************************************************************************************''
 Sub DLGSNCRefreshObject
 
-Dim	fX, fY As Float,
-	sX, sY As String
+Dim	fX, fY, fZ, fM As Float,
+	sX, sY, sZ, sM As String
 
 OnError GoTo ErrorOccured
 
 	sX	= ReadControlValue(CTRL_TXT_X)
 	sY	= ReadControlValue(CTRL_TXT_Y)
+
+	If mbSupportMZ And SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
+		sZ	= ReadControlValue(CTRL_TXT_Z)
+		sM	= ReadControlValue(CTRL_TXT_M)
+	End If
 
 	If sX = "" or sY = "" Then
 		Note "The X og Y coordinate are empty. Ignoring this change"
@@ -416,8 +487,25 @@ OnError GoTo ErrorOccured
 	fX	= DeformatNumber$(sX)
 	fY	= DeformatNumber$(sY)
 
-	Alter Object moInput
-		Node Set Position mnSegment, mnNode (fX, fY)
+	fZ	= DeformatNumber$(sZ)
+	fM	= DeformatNumber$(sM)
+
+	If mbSupportMZ And SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
+		If ReadControlValue(CTRL_CHK_Z) And ReadControlValue(CTRL_CHK_M) Then
+			Alter Object moInput
+				Node Set Position mnSegment, mnNode (fX, fY, fZ, fM)
+		ElseIf ReadControlValue(CTRL_CHK_Z) Then
+			Alter Object moInput
+				Node Set Position mnSegment, mnNode (fX, fY, fZ)
+		ElseIf ReadControlValue(CTRL_CHK_M) Then
+			Alter Object moInput
+				Node Set Position mnSegment, mnNode (fX, fY, , fM)
+		End If
+	Else
+		Alter Object moInput
+			Node Set Position mnSegment, mnNode (fX, fY)
+	End If
+
 	Alter Object moInput
 		Info OBJ_INFO_PEN, mpenTemp
 

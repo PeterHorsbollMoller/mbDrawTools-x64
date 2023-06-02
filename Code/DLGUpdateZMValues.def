@@ -1,0 +1,31 @@
+﻿Define	VALUE_TYPE_Z 	1
+Define	VALUE_TYPE_M 	2
+
+Declare Function DLGUpdateZMValues(ByVal sTab As String) As Logical
+
+Declare Sub DLGUZMVSetZ(	  ByVal fValue As Float
+					)
+Declare Function DLGUZMVGetZ() As Float
+Declare Sub DLGUZMVSetM(	  ByVal fValue As Float
+					)
+Declare Function DLGUZMVGetM() As Float
+Declare Sub DLGUZMVSetValue(	  ByVal nZorM As Integer
+						, ByVal fValue As Float)
+Declare Function DLGUZMVGetValue(	  ByVal nZorM As Integer
+							) As Float
+Declare Sub DLGUZMVSetColumnName(	  ByVal nZorM As Integer
+							, ByVal sColumnName As String)
+Declare Function DLGUZMVGetColumnName(	  ByVal nZorM As Integer
+								) As String
+Declare Sub DLGUZMVSetUseColumn(	  ByVal nZorM As Integer
+							, ByVal bUseColumn As Logical)
+Declare Function DLGUZMVUseColumn(	  ByVal nZorM As Integer
+							) As Logical
+Declare Sub DLGUZMVSetUpdateType(	  ByVal nZorM As Integer
+							, ByVal nUpdateType As Integer)
+Declare Function DLGUZMVGetUpdateType(	  ByVal nZorM As Integer
+								) As Integer
+Declare Sub DLGUZMVSetUpdateValue(	  ByVal nZorM As Integer
+							, ByVal nUpdateType As Integer)
+Declare Function DLGUZMVUpdateValue(  ByVal nZorM As Integer
+								) As Logical

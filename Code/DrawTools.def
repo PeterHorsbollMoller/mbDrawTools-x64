@@ -12,6 +12,8 @@ Declare Sub DTPolylineAddNode
 Declare Sub DTPolylineAddStartNode
 Declare Sub DTPolylineAddEndNode
 Declare Sub DTNodeSetCoordinate
+Declare Sub DTUpdateZMValuesOnSelection
+
 Declare Sub DTPolylineRemoveStartNode
 Declare Sub DTPolylineRemoveEndNode
 Declare Sub DTCombineIntoNew
