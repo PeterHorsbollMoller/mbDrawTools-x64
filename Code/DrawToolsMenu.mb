@@ -30,11 +30,14 @@
 '							SetNodeCoordinate now also allows you to delete a node
 '	16/05/2023 08.43.27 3.0.1	Added support for editing M & Z values through the Node Editing tool
 '							Added tool for updating all Z or M values on selected records
-'	01-06-2023 15:29:26			Removed call the OBJMZAddZSupport as Pro now can do this
+'	01-06-2023 15:29:26	3.0.2	Removed call the OBJMZAddZSupport as Pro now can do this
 '							Improved UpdateMZValue to also allow the user to select a column with values to use
+'	06-06-2023 12:39:56	3.0.3	Exposed two new functions: DTCartesianOffsetXYZ and DTSphericalOffsetXYZ to offset an existing object in XYZ direction
+'	07-06-2023 07:21:32 3.0.4	Exposed four new function to set and scale M/Z values on objects: DTObjectSetM, DTObjectSetZ, OBJMZScaleM, and OBJMZScaleZ
 '*******************************************************************************
 '	Support objects with multiple sections in the Alter Nodes dialog
 '	Delete current polygon/polyline section in the Alter Nodes dialog (https://ideas.precisely.com/ideas/MIPRO-I-70)
+'	Dialog around DTCartesianOffsetXYZ to offset selected objects and/or create copies of selected objects, initial through a line tool
 '*******************************************************************************
 
 '-------------------------------------
@@ -46,7 +49,7 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"3.0.2"
+Define xVersion 		"3.0.4"
 Define xYear			"2023"
 Define xAddToMenuBar	FALSE
 
@@ -115,6 +118,16 @@ OnError GoTo ErrorOccured
 	nResult = RBNRegisterFunctionAsPublic("OBJCartesianCreateArrow", "DTCartesianCreateArrow", "Create an arrow from a polyline giving size and end types.")
 	nResult = RBNRegisterFunctionAsPublic("MATHNorth2MathAngle", "DTNorth2MathAngle", "Converts a North angle to a Math angle.")
 	nResult = RBNRegisterFunctionAsPublic("MathMath2NorthAngle", "DTMath2NorthAngle", "Converts a Math angle to a North angle.")
+
+	If SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
+		nResult = RBNRegisterFunctionAsPublic("OBJMZCartesianOffsetXYZ", "DTCartesianOffsetXYZ", "Cartesian Offsets an existing object by XYZ values using defined distance units.")
+		nResult = RBNRegisterFunctionAsPublic("OBJMZSphericalOffsetXYZ", "DTSphericalOffsetXYZ", "Spherical Offsets an existing object by XYZ values using defined distance units.")
+
+		nResult = RBNRegisterFunctionAsPublic("OBJMZSetM", "DTObjectSetM", "Sets the M value on an existing object to the given value.")
+		nResult = RBNRegisterFunctionAsPublic("OBJMZSetZ", "DTObjectSetZ", "Sets the Z value on an existing object to the given value.")
+		nResult = RBNRegisterFunctionAsPublic("OBJMZScaleM", "DTObjectScaleM", "Multiplies the M value on an existing object by the given value.")
+		nResult = RBNRegisterFunctionAsPublic("OBJMZScaleZ", "DTObjectScaleZ", "Multiplies the Z value on an existing object by the given value.")
+	End If
 
 	Exit Sub
 '-------------------------
