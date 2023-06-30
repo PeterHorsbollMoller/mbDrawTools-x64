@@ -34,10 +34,17 @@
 '							Improved UpdateMZValue to also allow the user to select a column with values to use
 '	06-06-2023 12:39:56	3.0.3	Exposed two new functions: DTCartesianOffsetXYZ and DTSphericalOffsetXYZ to offset an existing object in XYZ direction
 '	07-06-2023 07:21:32 3.0.4	Exposed four new function to set and scale M/Z values on objects: DTObjectSetM, DTObjectSetZ, OBJMZScaleM, and OBJMZScaleZ
+'	27-06-2023 11:36:23 3.0.5	Renamed OBJCreateAnnulus to OBJCreateAnnulusSector. An Annulus really just is a ring
+'	30-06-2023 09:46:16	3.0.6	Added:
+'								- DTExtractNodesSelection: Extracts nodes into a new nodes table
+'								- DTUpdateZMUsingNodesTable: Updates nodes using points in a nodes table
 '*******************************************************************************
 '	Support objects with multiple sections in the Alter Nodes dialog
 '	Delete current polygon/polyline section in the Alter Nodes dialog (https://ideas.precisely.com/ideas/MIPRO-I-70)
 '	Dialog around DTCartesianOffsetXYZ to offset selected objects and/or create copies of selected objects, initial through a line tool
+'	Tool for AnnulusSector and CircularSector to create it from a tool
+'	Dialog for AnnulusSector and CircularSector to create it from a table
+'	Create a arrow from a simple line or two points where the arrow is rounded off to the left or right side
 '*******************************************************************************
 
 '-------------------------------------
@@ -49,7 +56,7 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"3.0.4"
+Define xVersion 		"3.0.6"
 Define xYear			"2023"
 Define xAddToMenuBar	FALSE
 
@@ -113,7 +120,7 @@ OnError GoTo ErrorOccured
 	nResult = RBNRegisterFunctionAsPublic("OBJCreateTrapez", "DTCreateTrapez", "Creates a trapez using a starting point, direction, length, width at start and end, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
 	nResult = RBNRegisterFunctionAsPublic("OBJCreateTriangle", "DTCreateTriangle", "Creates a triangle using a starting point, direction, length, width, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
 	nResult = RBNRegisterFunctionAsPublic("OBJRemoveDuplicateNodes", "DTRemoveDuplicateNodes", "Removed duplicate nodes from input object using the given tolerance in meters")
-	nResult = RBNRegisterFunctionAsPublic("OBJCreateAnnulus", "DTCreateAnnulus", "Create an annulus using a point, direction and sizes.")
+	nResult = RBNRegisterFunctionAsPublic("OBJCreateAnnulusSector", "DTCreateAnnulusSector", "Create an annulus sector using a point, direction and sizes.")
 	nResult = RBNRegisterFunctionAsPublic("OBJCreateCircularSector", "DTCreateCircularSector", "Create a circular sector using a point, direction and sizes.")
 	nResult = RBNRegisterFunctionAsPublic("OBJCartesianCreateArrow", "DTCartesianCreateArrow", "Create an arrow from a polyline giving size and end types.")
 	nResult = RBNRegisterFunctionAsPublic("MATHNorth2MathAngle", "DTNorth2MathAngle", "Converts a North angle to a Math angle.")

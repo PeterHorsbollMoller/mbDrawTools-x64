@@ -35,7 +35,11 @@ Include "DLGArrow.def"
 Include "DLGSetNodeCoordinate.def"
 Include "DLGUpdateZMValues.def"
 
-Dim	msIconsFile As String
+Declare Sub DTUpdateZMUsingNodesTable_Single
+
+Dim	msIconsFile, msBaseTab As String,
+	mnRowIDBasePrev As Integer,
+	moBase As Object
 '**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
 'Parameters:
@@ -217,12 +221,25 @@ OnError GoTo ErrorOccured
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_EDIT
+	sSplitButtonName		= "CombineDropDown"
+	sSplitButtonGroupName	= "CombineDropDownMenuGroup"
+
+
+	nCtrlIdx = RBNDropDButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Combine selected objects into new object.", "Select multiple polygons and make sure you have an editable layer to insert the new object into.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_SMALL, "", ApplicationDirectory$() & "Images\ObjectsCombine_32.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCombineIntoNew")
+	End If
+
+
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_GROUP_SPATIAL_EDIT
 	sSplitButtonName		= "TransformSplitButton"
 	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
-
-'	nCtrlIdx = RBNSplitButtonGroupAddControl("sepTransformSplitButton", "", ""
-'		, ControlType_ContextMenuSeparator, sTabName, sGroupName
-'		, sSplitButtonName, sSplitButtonGroupName)
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -252,30 +269,6 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTRegionRemove")
 	End If
 
-	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
-	If nCtrlIdx > 0 Then
-		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Combine selected objects into new object.", "Select multiple polygons and make sure you have an editable layer to insert the new object into.")
-		'Set the button icon
-		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsCombine_32.png")
-		'Set Custom MapBasic Handle to the button
-		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCombineIntoNew")
-	End If
-
-	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
-	If nCtrlIdx > 0 Then
-		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Insert gaps from the editable layer where clicked into the editable layer.", "Make sure you have an editable layer.")
-		'Set the button icon
-		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsGap_32.png")
-		'Set DrawMode
-		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
-		'Set Cursor
-		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_LRG_CROSSHAIR, "")
-		'Set Custom MapBasic Handle to the button
-		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateGaps")
-	End If
-
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_EDIT
 	sSplitButtonName		= "NodesSplitButton"
@@ -286,18 +279,27 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTUpdateZMOnSelection", "Update ZM Values", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Update Z and M values on selected bojects.", "Make sure you have selected objects from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Update Z and M values on selected objects.", "Make sure you have selected objects from the editable layer.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\UpdateZM_64.png")
 		'Set Custom MapBasic Handle to the button
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTUpdateZMValuesOnSelection")
 	End If
 
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTUpdateZMUsingNodesTable", "Update ZM using Nodes", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Update Z and M values on editable layer using a table with nodes.", "Make sure you have an editable layer in the active map window.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\UpdateMZUsingNodes_64.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTUpdateZMUsingNodesTable")
+	End If
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddNode", "Add Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddNode_32.png")
 		'Set DrawMode
@@ -311,7 +313,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddStartNode", "Add Start Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new start node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new start node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddStartNode_32.png")
 		'Set DrawMode
@@ -324,7 +326,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineAddEndNode", "Add End Node", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new end node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Add new end node to selected polyline where clicked.", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineAddEndNode_32.png")
 		'Set DrawMode
@@ -337,7 +339,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTNodeSetCoordinate", "Set Node Coordinate", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Set coordinate for specific node", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Set coordinate for specific node", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\NodeSetCoordinate_32.png")
 		'Set DrawMode
@@ -351,7 +353,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveStartNode", "Remove Start Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove start node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove start node from the selected polyline.", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveStartNode_32.png")
 		'Set Custom MapBasic Handle to the button
@@ -360,7 +362,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTPolylineRemoveEndNode", "Remove End Node", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove end node from the selected polyline.", "Make sure you have selected a polyline from the editable layer.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Remove end node from the selected polyline.", "Make sure you have selected a polyline from the editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PolylineRemoveEndNode_32.png")
 		'Set Custom MapBasic Handle to the button
@@ -383,15 +385,27 @@ OnError GoTo ErrorOccured
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE		'SpatialCreateBar
-'	sSplitButtonName		= "NodesSplitButton"
-'	sSplitButtonGroupName	= "NodesSplitButtonMenuGroup"
 	sSplitButtonName		= "SpatialCreateInsertSplitButton"
 	sSplitButtonGroupName	= "InsertRegionsMenuGroup"
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Insert gaps from the editable layer where clicked into the editable layer.", "Make sure you have an editable layer in the active map window.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ObjectsGap_32.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POINT)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_LRG_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateGaps")
+	End If
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawArrow", "Arrow", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw an Arrow", "Make sure you have an editable layer in your map.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw an Arrow", "Make sure you have an editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\Arrows_32.png")
 		'Set DrawMode
@@ -405,7 +419,7 @@ OnError GoTo ErrorOccured
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawIsoscelesTrapez", "Isosceles Trapezoid", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
-		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Isosceles Trapezoid using direction and size details", "Make sure you have an editable layer in your map.")
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Isosceles Trapezoid using direction and size details", "Make sure you have an editable layer in the active map window.")
 		'Set the button icon
 		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\IsoscelesTrapez_32.png")
 		'Set DrawMode
@@ -418,6 +432,17 @@ OnError GoTo ErrorOccured
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE
+
+	nCtrlIdx = RBNGroupInsertControlBefore("DTExtractNodes", "Extract Nodes", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Extract Nodes into Nodes Table for the selected polylines/polygons.", "Make sure you have selected at least one object from any table.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\ExtractNodes_64.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTExtractNodesSelection")
+	End If
+
 	nCtrlIdx = RBNGroupInsertControlBefore("DTNodeCreateAnglePoints", "Create Angle Node Points", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
@@ -518,11 +543,14 @@ OnError GoTo ErrorOccured
 	Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
 	Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
 	Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", TRUE)
+	Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", TRUE)
 
 	nWID		= FrontWindow()
 
 	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", FALSE)
 	End If
 	If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -550,6 +578,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 	Else
 		If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
 			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -563,6 +592,7 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 		Else
 			nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
 			If nEditLayerID < 1 Then
@@ -579,6 +609,7 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 			Else
 				If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 					Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -1023,33 +1054,6 @@ OnError GoTo ErrorOccured
 		End If
 	End If
 
-
-'	Fetch First From sQuery
-'	Do Until EOT(sQuery)
-'		nROWID 	= aROWID
-'		oInput	= aObj
-'
-'		If DLGUZMVUseColumn(VALUE_TYPE_Z) Then
-'			fValueZ	= aValueZ
-'		Else
-'			fValueZ	= DLGUZMVGetValue(VALUE_TYPE_Z)
-'		End If
-'		If DLGUZMVUseColumn(VALUE_TYPE_M) Then
-'			fValueM	= aValueM
-'		Else
-'			fValueM	= DLGUZMVGetValue(VALUE_TYPE_M)
-'		End If
-'		Print "Update Object with Z Value " & Formatnumber$(fValueZ)
-'
-''		oInput = OBJMZUpdateZMValues(oInput, DLGUZMVGetValue(VALUE_TYPE_Z), DLGUZMVGetUpdateType(VALUE_TYPE_Z), DLGUZMVGetValue(VALUE_TYPE_M), DLGUZMVGetUpdateType(VALUE_TYPE_M))
-'		oInput = OBJMZUpdateZValues(oInput, fValueZ, DLGUZMVGetUpdateType(VALUE_TYPE_Z))
-'		Update sQuery
-'			Set		OBJ = oInput
-'			Where	ROWID = nROWID
-'
-'		Fetch Next From sQuery
-'	Loop
-
 	Close Table sQuery
 
 	Exit Sub
@@ -1279,76 +1283,6 @@ OnError GoTo ErrorOccured
 								, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetArrowLengthPct(ARROW_END_HEAD)/100, DLGAGetArrowWidthPct(ARROW_END_HEAD)/100
 								, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetArrowLengthPct(ARROW_END_TAIL)/100, DLGAGetArrowWidthPct(ARROW_END_TAIL)/100)
 
-
-'	oArrowLine = OBJRemoveDuplicateNodes(oDrawn, 0.5)	'meters
-'
-'	'**Creating Arrow Head at the end of the line
-'	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
-'	fEndX		= ObjectNodeX(oArrowLine, 1, nNumNodes)
-'	fEndY		= ObjectNodeY(oArrowLine, 1, nNumNodes)
-'
-'	oBuffer		= Buffer(CreatePoint(fEndX, fEndY), 20, DLGAGetBufferWidth(), "m")
-'	oArrowLine	= Erase(oArrowLine, oBuffer)
-'	nNumNodes		= ObjectInfo(oArrowLine, OBJ_INFO_NPNTS)
-'
-'	Create Pline
-'		Into Variable oLineEnd
-'		0
-'	Alter Object oLineEnd
-'		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, nNumNodes), ObjectNodeY(oArrowLine, 1, nNumNodes))
-'	Alter Object oLineEnd
-'		Node Add Position 1, 2 (fEndX, fEndY)
-'
-'	Do Case DLGAGetArrowType(ARROW_END_HEAD)
-'		Case ARROW_END_TYPE_ROUNDED
-'			'Print "Arrow Head: Rounded"
-'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-'			'oArrowLine	= Erase(oArrowLine, oArrowHead)
-'		Case ARROW_END_TYPE_FLAT
-'			'Print "Arrow Head: Flat"
-'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-'			oArrowLine	= Erase(oArrowLine, oArrowHead)
-'		Case ARROW_END_TYPE_ARROW
-'			'Print "Arrow Head: Arrow"
-'			oArrowHead	= OBJCartesianCreateArrowHead(oLineEnd, DLGAGetArrowType(ARROW_END_HEAD), DLGAGetArrowWidth(ARROW_END_HEAD), DLGAGetArrowLength(ARROW_END_HEAD), DLGAGetBufferResolution())
-'			oArrowLine	= Erase(oArrowLine, oArrowHead)
-'	End Case
-'
-'	'**Creating Arrow Tail at the start of the line
-'	fStartX		= ObjectNodeX(oArrowLine, 1, 1)
-'	fStartY		= ObjectNodeY(oArrowLine, 1, 1)
-'
-'	oBuffer		= Buffer(CreatePoint(fStartX, fStartY), 20, DLGAGetBufferWidth(), "m")
-'	oArrowLine	= Erase(oArrowLine, oBuffer)
-'
-'	Create Pline
-'		Into Variable oLineStart
-'		0
-'	Alter Object oLineStart
-'		Node Add Position 1, 1 (ObjectNodeX(oArrowLine, 1, 1), ObjectNodeY(oArrowLine, 1, 1))
-'	Alter Object oLineStart
-'		Node Add Position 1, 2 (fStartX, fStartY)
-'
-'	Do Case DLGAGetArrowType(ARROW_END_TAIL)
-'		Case ARROW_END_TYPE_ROUNDED
-'			'Print "Arrow Tail: Rounded"
-'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-'			'oArrowLine	= Erase(oArrowLine, oArrowTail)
-'		Case ARROW_END_TYPE_FLAT
-'			'Print "Arrow Tail: Flat"
-'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetBufferWidth(), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-'			oArrowLine	= Erase(oArrowLine, oArrowTail)
-'		Case ARROW_END_TYPE_ARROW
-'			'Print "Arrow Tail: Arrow"
-'			oArrowTail	= OBJCartesianCreateArrowHead(oLineStart, DLGAGetArrowType(ARROW_END_TAIL), DLGAGetArrowWidth(ARROW_END_TAIL), DLGAGetArrowLength(ARROW_END_TAIL), DLGAGetBufferResolution())
-'			oArrowLine	= Erase(oArrowLine, oArrowTail)
-'	End Case
-'
-'	oArrow		= Buffer(oArrowLine, 20, DLGAGetBufferWidth(), "m")
-'
-'	oArrow		= Combine(oArrow, oArrowHead)
-'	oArrow		= Combine(oArrow, oArrowTail)
-
 	Insert Into sTab (OBJ) Values (oArrow)
 
 	Exit Sub
@@ -1455,7 +1389,6 @@ OnError GoTo ErrorOccured
 	fDirectionPerp1	= IIf(fDirection + 90 > 360, fDirection - 90, fDirection + 90)
 	fDirectionPerp2	= IIf(fDirectionPerp1 > 180, fDirectionPerp1 - 180, fDirectionPerp1 + 180)
 
-
 	Create Pline
 		Into Variable oBaseLine
 		2 (fXFrom, fYFrom) (fXTo, fYTo)
@@ -1481,7 +1414,6 @@ OnError GoTo ErrorOccured
 	fMaxLength	= Maximum(
 					Distance(ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MINY), ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MAXY), "m")
 					, Distance(ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MINY), ObjectGeography(oPolygon, OBJ_GEO_MAXX), ObjectGeography(oPolygon, OBJ_GEO_MINY), "m")
-
 					) * 2
 
 	Print "Max Length: " & FormatNumber$(Round(fMaxLength, 0.01)) & " m"
@@ -1641,7 +1573,7 @@ Dim	sTab, sNodeTab, sOutputTabFile As String,
 
 OnError GoTo ErrorOccured
 
-	sTab = DLGSelectTable(TAB_USE_ALL_MAPPABLE_BUT_IMAGES, "Calculate Node Angles", "Select table to run thru", "", FALSE, sTab)
+	sTab = DLGSelectTable(TAB_USE_ALL_MAPPABLE_BUT_IMAGES, "Calculate Node Angles", "Select table to run through", "", FALSE, sTab)
 	If sTab = "" Then
 		Exit Sub
 	End If
@@ -1755,3 +1687,308 @@ ErrorOccured:
 	Call ERRShow()
 
 End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTExtractNodesSelection
+
+Dim	sQuery, sBaseTab, sNodesFile, sNodesTab As String,
+	aRowID, aObj As Alias,
+	oSel, oNode As Object,
+	nRowID, nSegm, nNode As Integer,
+	fX, fY, fZ, fM As Float,
+	bSupportsMZ, bHasM, bHasZ As Logical
+
+OnError GoTo ErrorOccured
+
+	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
+		Exit Sub
+	End If
+
+	sQuery		= SelectionInfo(SEL_INFO_SELNAME)
+	sBaseTab		= SelectionInfo(SEL_INFO_TABLENAME)
+	bSupportsMZ	= TableInfo(sBaseTab, TAB_INFO_SUPPORT_MZ)
+
+	sNodesFile	= TableInfo(sBaseTab, TAB_INFO_TABFILE)
+	sNodesFile	= Left$(sNodesFile, Len(sNodesFile) - 4) & " Nodes.tab"
+	sNodesTab		= PathToTableName$(sNodesFile)
+
+	If TABIsOpen(sNodesTab) Then
+		If Not Ask("Output table for nodes already exists:" & Chr$(10) & sNodesTab & Chr$(10) & ". Do you want to overwrite it or add to it?", "Add to", "Overwrite") Then
+			Drop Table sNodesTab
+		End If
+	End If
+
+	If Not TABIsOpen(sNodesTab) Then
+		Create Table sNodesTab
+			(
+				OBJECT_ID		LargeInt,
+				SEGMENT_ID	Integer,
+				NODE_ID		Integer,
+				X			Float,
+				Y			Float,
+				Z			Float,
+				M			Float,
+				NEW_Z		Float
+			)
+			File sNodesFile
+		If bSupportsMZ Then
+			Create Map For sNodesTab
+				Coordsys Table sBaseTab SupportMZ
+		Else
+			Create Map For sNodesTab
+				Coordsys Table sBaseTab
+		End If
+	End If
+
+	aRowID	= sQuery & ".ROWID"
+	aObj		= sQuery & ".OBJ"
+	bHasZ	= FALSE
+	bHasM	= FALSE
+
+	Set Coordsys Table sBaseTab
+	Fetch First From sQuery
+	Do Until EOT(sQuery)
+		nRowID	= aRowID
+		nRowID	= BaseTableRowID(sQuery)
+		oSel		= aObj
+
+		If bSupportsMZ Then
+			bHasZ	= ObjectInfo(oSel, OBJ_INFO_HAS_Z)
+			bHasM	= ObjectInfo(oSel, OBJ_INFO_HAS_M)
+		End If
+
+		For nSegm	= 1 To ObjectInfo(oSel, OBJ_INFO_NPOLYGONS)
+			For nNode = 1 To ObjectInfo(oSel, OBJ_INFO_NPOLYGONS + nSegm)
+				fX		= ObjectNodeX(oSel, nSegm, nNode)
+				fY		= ObjectNodeY(oSel, nSegm, nNode)
+
+				oNode	= CreatePoint(fX, fY)
+
+				If bHasZ Then
+					fZ		= ObjectNodeZ(oSel, nSegm, nNode)
+					oNode	= OBJMZUpdateZValues(oNode, fZ, CALC_TYPE_SET_TO)
+				End If
+				If bHasM Then
+					fM		= ObjectNodeM(oSel, nSegm, nNode)
+					oNode	= OBJMZUpdateMValues(oNode, fM, CALC_TYPE_SET_TO)
+				End If
+
+				Insert Into sNodesTab
+					(OBJECT_ID, SEGMENT_ID, NODE_ID, X, Y, Z, M, OBJ)
+					Values (nRowID, nSegm, nNode, fX, fY, fZ, fM, oNode)
+			Next
+		Next	'nSegm
+
+		Fetch Next From sQuery
+	Loop
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTExtractNodesSelection")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTUpdateZMUsingNodesTable
+
+Dim	nMID, nLayer As Integer,
+'	nRowIDNodes, nRowID, nSegment, nNode As Integer,
+'	fX, fY, fZ, fM As Float,
+	sNodesFile, sNodesTab As String
+'	aBaseObj As Alias,
+'	oNode, oBase As Object
+
+OnError GoTo ErrorOccured
+
+	nMID = FrontWindow()
+	If nMID = 0 Then
+		Exit Sub
+	End If
+	If Not WindowInfo(nMID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Exit Sub
+	End If
+	nLayer	= MapperInfo(nMID, MAPPER_INFO_EDIT_LAYER)
+	If nLayer = 0 Then
+		Exit Sub
+	End If
+
+	msBaseTab		= LayerInfo(nMID, nLayer, LAYER_INFO_NAME)
+	sNodesFile	= TableInfo(msBaseTab, TAB_INFO_TABFILE)
+	sNodesFile	= Left$(sNodesFile, Len(sNodesFile) - 4) & " Nodes.tab"
+	sNodesTab		= PathToTableName$(sNodesFile)
+
+	If Not TABIsOpen(sNodesTab) Then
+		Note "Nodes table for the editable layer isn't open: '" & sNodesTab & "'. Please make sure you have a nodes table for the editable layer!"
+		Exit Sub
+	End If
+
+	If Not Ask("This process will update the nodes on the objects in the editable layer with the MZ values from the points in the nodes layer.", "Continue", "Abort") Then
+		Exit Sub
+	End If
+
+	Select *
+		From sNodesTab
+		Order By OBJECT_ID, SEGMENT_ID, NODE_ID
+		Into __NODES__SORTED NoSelect Hide
+
+	mnRowIDBasePrev	= 0
+	Progressbar "Updating Nodes using Point Table..."
+		Calling DTUpdateZMUsingNodesTable_Single
+		Range TableInfo(sNodesTab, TAB_INFO_NROWS)
+
+'	aBaseObj		= msBaseTab & ".OBJ"
+'	Fetch First From __NODES__SORTED
+'	Do Until EOT(__NODES__SORTED)
+'
+'		nRowID		= __NODES__SORTED.OBJECT_ID
+'		nRowIDNodes	= __NODES__SORTED.ROWID
+'		If nRowIDNodes Mod 100 = 1 Then
+'			Call DEBUGPrint("Node RowID: " & FormatNumber$(nRowIDNodes) & " of " & FormatNumber$(TableInfo(sNodesTab, TAB_INFO_NROWS)) &  " Polygon RowID: " & FormatNumber$(nROWID))
+'		End If
+'
+'		If Not mnRowIDBasePrev = nRowID Then
+'			If mnRowIDBasePrev > 0 Then
+'				Call DEBUGPrint("Updating RowID " & FormatNumber$(mnRowIDBasePrev))
+'				Update msBaseTab
+'					Set OBJ = oBase
+'					Where ROWID = mnRowIDBasePrev
+'			End If
+'			Fetch Rec nROWID From msBaseTab
+'			oBase = aBaseObj
+'			mnRowIDBasePrev = nROWID
+'		End If
+'
+'		nSegment	= __NODES__SORTED.SEGMENT_ID
+'		nNode	= __NODES__SORTED.NODE_ID
+'		oNode	= __NODES__SORTED.OBJ
+'
+'		If ObjectInfo(oBase, OBJ_INFO_NPOLYGONS) >= nSegment Then
+'			If ObjectInfo(oBase, OBJ_INFO_NPOLYGONS + nSegment) >= nNode Then
+'				fX	= CentroidX(oNode)
+'				fY	= CentroidY(oNode)
+'				If ObjectInfo(oNode, OBJ_INFO_HAS_Z) Then
+'					fZ	= ObjectGeography(oNode, OBJ_GEO_POINTZ)
+'				Else
+'					fZ	= 0
+'				End If
+'				If ObjectInfo(oNode, OBJ_INFO_HAS_M) Then
+'					fM	= ObjectGeography(oNode, OBJ_GEO_POINTM)
+'				Else
+'					fM	= 0
+'				End If
+'
+'				Alter Object oBase
+'					Node Set Position nSegment, nNode (fX, fY, fZ, fM)
+'			End If
+'		End If
+'
+'		Fetch Next From __NODES__SORTED
+'	Loop
+
+'	If mnRowIDBasePrev > 0 Then
+'		Update msBaseTab
+'			Set OBJ = moBase
+'			Where ROWID = mnRowIDBasePrev
+'	End If
+
+	Close Table __NODES__SORTED
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesTable")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTUpdateZMUsingNodesTable_Single
+
+Dim	nRowIDNodes, nRowIDBase, nSegment, nNode As Integer,
+	fX, fY, fZ, fM As Float,
+	oNode As Object,
+	aBaseObj As Alias
+
+OnError GoTo ErrorOccured
+
+	aBaseObj		= msBaseTab & ".OBJ"
+
+	nRowIDNodes	= __NODES__SORTED.ROWID
+	nRowIDBase	= __NODES__SORTED.OBJECT_ID
+'	If nRowIDNodes Mod 100 = 1 Then
+'		Call DEBUGPrint("Node RowID: " & FormatNumber$(nRowIDNodes) & ", Polygon RowID: " & FormatNumber$(nRowIDBase))
+'	End If
+
+	If Not mnRowIDBasePrev = nRowIDBase Then
+		If mnRowIDBasePrev > 0 Then
+'			Call DEBUGPrint("Updating RowID " & FormatNumber$(mnRowIDBasePrev))
+			Update msBaseTab
+				Set OBJ = moBase
+				Where ROWID = mnRowIDBasePrev
+		End If
+		Fetch Rec nRowIDBase From msBaseTab
+		moBase = aBaseObj
+		mnRowIDBasePrev = nRowIDBase
+	End If
+
+	nSegment	= __NODES__SORTED.SEGMENT_ID
+	nNode	= __NODES__SORTED.NODE_ID
+	oNode	= __NODES__SORTED.OBJ
+
+	If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS) >= nSegment Then
+		If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS + nSegment) >= nNode Then
+			fX	= CentroidX(oNode)
+			fY	= CentroidY(oNode)
+			If ObjectInfo(oNode, OBJ_INFO_HAS_Z) Then
+				fZ	= ObjectGeography(oNode, OBJ_GEO_POINTZ)
+			Else
+				fZ	= 0
+			End If
+			If ObjectInfo(oNode, OBJ_INFO_HAS_M) Then
+				fM	= ObjectGeography(oNode, OBJ_GEO_POINTM)
+			Else
+				fM	= 0
+			End If
+
+			Alter Object moBase
+				Node Set Position nSegment, nNode (fX, fY, fZ, fM)
+		End If
+	End If
+
+	Fetch Next From __NODES__SORTED
+
+	If EOT(__NODES__SORTED) Then
+		If mnRowIDBasePrev > 0 Then
+			Update msBaseTab
+				Set OBJ = moBase
+				Where ROWID = mnRowIDBasePrev
+		End If
+		Progressbar = -1
+	Else
+		Progressbar = nRowIDNodes
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesTable_Single")
+	Call ERRShow()
+
+End Sub
+
+
+

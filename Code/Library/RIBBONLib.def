@@ -1284,10 +1284,10 @@ Declare Function RBNControlGetCaptionIdx(	  ByVal nElementIdx As Integer
 							) As String
 
 Declare Sub RBNControlSetSizeThs(	  rbnControl As This
-							, ByVal nSize As Integer		'The Caption to to be seen in the Ribbon
+							, ByVal nSize As Integer		'The Size to to be set on the control
 							)
 Declare Sub RBNControlSetSizeIdx(	  ByVal nElementIdx As Integer
-							, ByVal sCaption As String		'The Caption to to be seen in the Ribbon
+							, ByVal nSize As Integer		'The Size to to be set on the control
 							)
 
 Declare Function RBNControlGetSizeThs(	  rbnControl As This
