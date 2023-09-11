@@ -34,8 +34,11 @@ Include "DLGIsoscelesTrapez.def"
 Include "DLGArrow.def"
 Include "DLGSetNodeCoordinate.def"
 Include "DLGUpdateZMValues.def"
+Include "DLGUpdateZMUsingNodes.def"
+Include "DLGOffsetXYZ.def"
 
-Declare Sub DTUpdateZMUsingNodesTable_Single
+Declare Sub DTUpdateZMUsingNodesObject_Single
+Declare Sub DTUpdateZMUsingNodesColumn_Single
 
 Dim	msIconsFile, msBaseTab As String,
 	mnRowIDBasePrev As Integer,
@@ -224,7 +227,6 @@ OnError GoTo ErrorOccured
 	sSplitButtonName		= "CombineDropDown"
 	sSplitButtonGroupName	= "CombineDropDownMenuGroup"
 
-
 	nCtrlIdx = RBNDropDButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
@@ -268,6 +270,26 @@ OnError GoTo ErrorOccured
 		'Set Custom MapBasic Handle to the button
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTRegionRemove")
 	End If
+
+'	sTabName				= TAB_SPATIAL
+'	sGroupName			= TAB_GROUP_SPATIAL_EDIT
+'	sSplitButtonName		= "TransformSplitButton"
+'	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTOffsetXYZSelection", "Offset in XYZ", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Offset selected Objects in XYZ Dimension.", "Select objects from the editable layer.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\OffsetXYZ_64.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTOffsetXYZSelection")
+	End If
+
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_EDIT
@@ -433,7 +455,7 @@ OnError GoTo ErrorOccured
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_GROUP_SPATIAL_CREATE
 
-	nCtrlIdx = RBNGroupInsertControlBefore("DTExtractNodes", "Extract Nodes", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
+	nCtrlIdx = RBNGroupInsertControlBefore("DTExtractNodesSelection", "Extract Nodes", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
 		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Extract Nodes into Nodes Table for the selected polylines/polygons.", "Make sure you have selected at least one object from any table.")
@@ -443,7 +465,7 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTExtractNodesSelection")
 	End If
 
-	nCtrlIdx = RBNGroupInsertControlBefore("DTNodeCreateAnglePoints", "Create Angle Node Points", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
+	nCtrlIdx = RBNGroupInsertControlBefore("DTCreateAnglePointAlong", "Create Angle Node Points", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
 	If nCtrlIdx > 0 Then
 		'Create & Set the button tooltip
 		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Create node points with minimum angle for polygons/polylines in a table.", "")
@@ -530,27 +552,51 @@ Dim	nWID, nEditLayerID As Integer
 
 OnError GoTo ErrorOccured
 
-	Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", TRUE)
-	Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", TRUE)
+	If NumTables() = 0 Then
+		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", FALSE)
+		Exit Sub
+	Else
+		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", TRUE)
+	End If
 
 	nWID		= FrontWindow()
 
 	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 	End If
 	If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -579,6 +625,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 	Else
 		If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
 			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -593,6 +640,7 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 		Else
 			nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
 			If nEditLayerID < 1 Then
@@ -610,6 +658,7 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 			Else
 				If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 					Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -621,6 +670,8 @@ OnError GoTo ErrorOccured
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 					Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
+'					Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
+					Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 				End If
 			End If
 		End If
@@ -1563,8 +1614,8 @@ End Sub
 '**********************************************************************************************''
 Sub DTCreateAnglePointAlong
 
-Dim	sTab, sNodeTab, sOutputTabFile As String,
-	nRow, nSegm, nNode As Integer,
+Dim	sTab, sNodesTab, sNodesFile As String,
+	nMID, nRow, nSegm, nNode As Integer,
 	oCur As Object,
 	tCur, tPrev, tNext As T_MI_POINT,
 	fAnglePrev, fAngleNext, fAngle As Float,
@@ -1580,24 +1631,37 @@ OnError GoTo ErrorOccured
 
 	Set CoordSys Table sTab
 
-'	If TableInfo(sTab, TAB_INFO_TYPE) = TAB_TYPE_RESULT Then
-		sNodeTab	= "Node Angles" & DATEGetISODate(CurDate())
-'	Else
-'		sNodeTab	= PathToFileName$(TableInfo(sTab, TAB_INFO_TABFILE),
-'	End If
-	sOutputTabFile = PathToDirectory$(TempFileName$("")) & sNodeTab & ".tab"
-	sNodeTab		= PathToTableName$(sOutputTabFile)
+	sNodesFile	= TableInfo(sTab, TAB_INFO_TABFILE)
+	sNodesFile	= Left$(sNodesFile, Len(sNodesFile) - 4) & " Nodes.tab"
+	'**Placing the nodes file in a temporary folder
+	sNodesFile	= PathToDirectory$(TempFileName$("")) & PathToFileName$(sNodesFile)
+	sNodesTab		= PathToTableName$(sNodesFile)
 
-	If not TABIsOpen(sNodeTab) Then
-		Create Table sNodeTab
+
+	If TableInfo(sTab, TAB_INFO_TYPE) = TAB_TYPE_RESULT Then
+		sNodesFile	= sTab & " Node Angles.tab"
+		'**Placing the nodes file in a temporary folder
+		sNodesFile = PathToDirectory$(TempFileName$("")) & sNodesFile
+	Else
+		sNodesFile	= TableInfo(sTab, TAB_INFO_TABFILE)
+		sNodesFile	= Left$(sNodesFile, Len(sNodesFile) - 4) & " Node Angles.tab"
+		'**Placing the nodes file in a temporary folder
+		sNodesFile	= PathToDirectory$(TempFileName$("")) & PathToFileName$(sNodesFile)
+	End If
+
+	sNodesTab		= PathToTableName$(sNodesFile)
+
+	If not TABIsOpen(sNodesTab) Then
+		Create Table sNodesTab
 			( TABLE_NAME		Char(50)
 			, RECORD_NO		Integer
 			, NODE_NO			Integer
 			, MINIMUM_ANGLE	Float
 			)
-			File sOutputTabFile
-		Create Map For sNodeTab
-			Using sTab
+			File sNodesFile
+		Create Map For sNodesTab
+			Coordsys Table sTab
+		Set Table sNodesTab Persist Off
 	End If
 
 '	Set Table Redraw Off
@@ -1636,7 +1700,7 @@ OnError GoTo ErrorOccured
 
 '					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
 
-					Insert Into sNodeTab
+					Insert Into sNodesTab
 						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
 						Values
 						(sTab, nRow, nNode, fAngle, tmipToPointWithStyle(tCur, symCur))
@@ -1665,7 +1729,7 @@ OnError GoTo ErrorOccured
 
 '					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
 
-					Insert Into sNodeTab
+					Insert Into sNodesTab
 						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
 						Values
 						(sTab, nRow, 1, fAngle, tmipToPointWithStyle(tCur, symCur))
@@ -1678,7 +1742,17 @@ OnError GoTo ErrorOccured
 
 '	Set Table Redraw On
 
-	Call RBNNotificationShow(PRGIGetApplicationName(), "The nodes are stored in a temporary table. Rename the table to keep the result.", Notify_Info, 20000)
+	Call RBNNotificationShow(PRGIGetApplicationName(), "The nodes are stored in the temporary table, " & sNodesTab & ". Rename the table to keep the result. It will not be maintained in your workspace", Notify_Info, 20000)
+
+	nMID = MAPFrontWindow()
+	If nMID > 0 Then
+		Add Map
+			Window nMID Auto
+			Layer sNodesTab
+		Set Map Window nMID
+			Layer sNodesTab
+				Label Auto On With MINIMUM_ANGLE
+	End If
 
 	Exit Sub
 '-------------------------
@@ -1698,13 +1772,14 @@ Sub DTExtractNodesSelection
 Dim	sQuery, sBaseTab, sNodesFile, sNodesTab As String,
 	aRowID, aObj As Alias,
 	oSel, oNode As Object,
-	nRowID, nSegm, nNode As Integer,
+	nRowID, nSegm, nNode, nMID As Integer,
 	fX, fY, fZ, fM As Float,
 	bSupportsMZ, bHasM, bHasZ As Logical
 
 OnError GoTo ErrorOccured
 
 	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
+		Note "Please select the records that you want to create nodes for!"
 		Exit Sub
 	End If
 
@@ -1714,10 +1789,12 @@ OnError GoTo ErrorOccured
 
 	sNodesFile	= TableInfo(sBaseTab, TAB_INFO_TABFILE)
 	sNodesFile	= Left$(sNodesFile, Len(sNodesFile) - 4) & " Nodes.tab"
+	'**Placing the nodes file in a temporary folder
+	sNodesFile	= PathToDirectory$(TempFileName$("")) & PathToFileName$(sNodesFile)
 	sNodesTab		= PathToTableName$(sNodesFile)
 
 	If TABIsOpen(sNodesTab) Then
-		If Not Ask("Output table for nodes already exists:" & Chr$(10) & sNodesTab & Chr$(10) & ". Do you want to overwrite it or add to it?", "Add to", "Overwrite") Then
+		If Not Ask("Output table for nodes already exists:" & Chr$(10) & sNodesTab & Chr$(10) & Chr$(10) & "Do you want to overwrite it or add to it?", "Add to", "Overwrite") Then
 			Drop Table sNodesTab
 		End If
 	End If
@@ -1732,16 +1809,18 @@ OnError GoTo ErrorOccured
 				Y			Float,
 				Z			Float,
 				M			Float,
-				NEW_Z		Float
+				NEW_Z		Float,
+				NEW_M		Float
 			)
 			File sNodesFile
 		If bSupportsMZ Then
 			Create Map For sNodesTab
-				Coordsys Table sBaseTab SupportMZ
+				Coordsys Table sBaseTab SupportMZ On
 		Else
 			Create Map For sNodesTab
 				Coordsys Table sBaseTab
 		End If
+		Set Table sNodesTab Persist Off
 	End If
 
 	aRowID	= sQuery & ".ROWID"
@@ -1786,6 +1865,15 @@ OnError GoTo ErrorOccured
 		Fetch Next From sQuery
 	Loop
 
+	Call RBNNotificationShow(PRGIGetApplicationName(), "The nodes are stored in the temporary table, " & sNodesTab & ". Rename the table to keep the result. It will not be maintained in your workspace", Notify_Info, 20000)
+
+	nMID = MAPFrontWindow()
+	If nMID > 0 Then
+		Add Map
+			Window nMID Auto
+			Layer sNodesTab
+	End If
+
 	Exit Sub
 '-------------------------
 ErrorOccured:
@@ -1828,13 +1916,17 @@ OnError GoTo ErrorOccured
 	sNodesTab		= PathToTableName$(sNodesFile)
 
 	If Not TABIsOpen(sNodesTab) Then
-		Note "Nodes table for the editable layer isn't open: '" & sNodesTab & "'. Please make sure you have a nodes table for the editable layer!"
+		Note "Nodes table for the editable layer '" & msBaseTab & "' isn't open: '" & sNodesTab & "'. Please make sure you have a nodes table for the editable layer!"
 		Exit Sub
 	End If
 
-	If Not Ask("This process will update the nodes on the objects in the editable layer with the MZ values from the points in the nodes layer.", "Continue", "Abort") Then
+	If Not DLGUpdateZMUsingNodes(msBaseTab, sNodesTab) Then
 		Exit Sub
 	End If
+
+'	If Not Ask("This process will update the nodes on the objects in the editable layer  '" & msBaseTab & "' with the MZ values from the points in the nodes layer.", "Continue", "Abort") Then
+'		Exit Sub
+'	End If
 
 	Select *
 		From sNodesTab
@@ -1842,64 +1934,20 @@ OnError GoTo ErrorOccured
 		Into __NODES__SORTED NoSelect Hide
 
 	mnRowIDBasePrev	= 0
-	Progressbar "Updating Nodes using Point Table..."
-		Calling DTUpdateZMUsingNodesTable_Single
-		Range TableInfo(sNodesTab, TAB_INFO_NROWS)
 
-'	aBaseObj		= msBaseTab & ".OBJ"
-'	Fetch First From __NODES__SORTED
-'	Do Until EOT(__NODES__SORTED)
-'
-'		nRowID		= __NODES__SORTED.OBJECT_ID
-'		nRowIDNodes	= __NODES__SORTED.ROWID
-'		If nRowIDNodes Mod 100 = 1 Then
-'			Call DEBUGPrint("Node RowID: " & FormatNumber$(nRowIDNodes) & " of " & FormatNumber$(TableInfo(sNodesTab, TAB_INFO_NROWS)) &  " Polygon RowID: " & FormatNumber$(nROWID))
-'		End If
-'
-'		If Not mnRowIDBasePrev = nRowID Then
-'			If mnRowIDBasePrev > 0 Then
-'				Call DEBUGPrint("Updating RowID " & FormatNumber$(mnRowIDBasePrev))
-'				Update msBaseTab
-'					Set OBJ = oBase
-'					Where ROWID = mnRowIDBasePrev
-'			End If
-'			Fetch Rec nROWID From msBaseTab
-'			oBase = aBaseObj
-'			mnRowIDBasePrev = nROWID
-'		End If
-'
-'		nSegment	= __NODES__SORTED.SEGMENT_ID
-'		nNode	= __NODES__SORTED.NODE_ID
-'		oNode	= __NODES__SORTED.OBJ
-'
-'		If ObjectInfo(oBase, OBJ_INFO_NPOLYGONS) >= nSegment Then
-'			If ObjectInfo(oBase, OBJ_INFO_NPOLYGONS + nSegment) >= nNode Then
-'				fX	= CentroidX(oNode)
-'				fY	= CentroidY(oNode)
-'				If ObjectInfo(oNode, OBJ_INFO_HAS_Z) Then
-'					fZ	= ObjectGeography(oNode, OBJ_GEO_POINTZ)
-'				Else
-'					fZ	= 0
-'				End If
-'				If ObjectInfo(oNode, OBJ_INFO_HAS_M) Then
-'					fM	= ObjectGeography(oNode, OBJ_GEO_POINTM)
-'				Else
-'					fM	= 0
-'				End If
-'
-'				Alter Object oBase
-'					Node Set Position nSegment, nNode (fX, fY, fZ, fM)
-'			End If
-'		End If
-'
-'		Fetch Next From __NODES__SORTED
-'	Loop
+	Set Table msBaseTab Redraw Off
 
-'	If mnRowIDBasePrev > 0 Then
-'		Update msBaseTab
-'			Set OBJ = moBase
-'			Where ROWID = mnRowIDBasePrev
-'	End If
+	If DLGUZMUNUpdateUsing() = UPDATE_USING_OBJECT Then
+		Progressbar "Updating Nodes using Object from Nodes Table..."
+			Calling DTUpdateZMUsingNodesObject_Single
+			Range TableInfo(sNodesTab, TAB_INFO_NROWS)
+	Else
+		Progressbar "Updating Nodes using Columns from Nodes Table..."
+			Calling DTUpdateZMUsingNodesColumn_Single
+			Range TableInfo(sNodesTab, TAB_INFO_NROWS)
+	End If
+
+	Set Table msBaseTab Redraw On
 
 	Close Table __NODES__SORTED
 
@@ -1916,7 +1964,7 @@ End Sub
 'Parameters:
 '
 '**********************************************************************************************''
-Sub DTUpdateZMUsingNodesTable_Single
+Sub DTUpdateZMUsingNodesObject_Single
 
 Dim	nRowIDNodes, nRowIDBase, nSegment, nNode As Integer,
 	fX, fY, fZ, fM As Float,
@@ -1940,7 +1988,9 @@ OnError GoTo ErrorOccured
 				Set OBJ = moBase
 				Where ROWID = mnRowIDBasePrev
 		End If
+		OnError Goto FetchRecordError
 		Fetch Rec nRowIDBase From msBaseTab
+		OnError Goto ErrorOccured
 		moBase = aBaseObj
 		mnRowIDBasePrev = nRowIDBase
 	End If
@@ -1951,8 +2001,13 @@ OnError GoTo ErrorOccured
 
 	If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS) >= nSegment Then
 		If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS + nSegment) >= nNode Then
-			fX	= CentroidX(oNode)
-			fY	= CentroidY(oNode)
+'			If DLGUZMUNUpdateValue("XY") Then
+'				fX	= CentroidX(oNode)
+'				fY	= CentroidY(oNode)
+'			Else
+				fX	= ObjectNodeX(moBase, nSegment, nNode)
+				fY	= ObjectNodeY(moBase, nSegment, nNode)
+'			End If
 			If ObjectInfo(oNode, OBJ_INFO_HAS_Z) Then
 				fZ	= ObjectGeography(oNode, OBJ_GEO_POINTZ)
 			Else
@@ -1968,6 +2023,9 @@ OnError GoTo ErrorOccured
 				Node Set Position nSegment, nNode (fX, fY, fZ, fM)
 		End If
 	End If
+
+'-------------------------
+NextRecord:
 
 	Fetch Next From __NODES__SORTED
 
@@ -1985,10 +2043,218 @@ OnError GoTo ErrorOccured
 	Exit Sub
 '-------------------------
 ErrorOccured:
-	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesTable_Single")
-	Call ERRShow()
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesColumn_Single")
+	Call ERRPrint()
+	GoTo NextRecord
+
+	Exit Sub
+'-------------------------
+FetchRecordError:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesColumn_Single")
+	Call ERRPrint()
+	GoTo NextRecord
 
 End Sub
 
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTUpdateZMUsingNodesColumn_Single
 
+Dim	nRowIDNodes, nRowIDBase, nSegment, nNode As Integer,
+	fX, fY, fZ, fM As Float,
+	oNode As Object,
+	aBaseObj, aZ, aM As Alias
+
+OnError GoTo ErrorOccured
+
+	aBaseObj		= msBaseTab & ".OBJ"
+
+	nRowIDNodes	= __NODES__SORTED.ROWID
+	nRowIDBase	= __NODES__SORTED.OBJECT_ID
+	If DLGUZMUNUpdateValue("Z") Then
+		aZ			= "__NODES__SORTED." & DLGUZMUNGetColumn("Z")
+	End If
+	If DLGUZMUNUpdateValue("M") Then
+		aM			= "__NODES__SORTED." & DLGUZMUNGetColumn("M")
+	End If
+
+	If Not mnRowIDBasePrev = nRowIDBase Then
+		If mnRowIDBasePrev > 0 Then
+'			Call DEBUGPrint("Updating RowID " & FormatNumber$(mnRowIDBasePrev))
+			Update msBaseTab
+				Set OBJ = moBase
+				Where ROWID = mnRowIDBasePrev
+		End If
+
+		OnError Goto FetchRecordError
+		Fetch Rec nRowIDBase From msBaseTab
+		OnError Goto ErrorOccured
+		moBase = aBaseObj
+		mnRowIDBasePrev = nRowIDBase
+	End If
+
+	nSegment	= __NODES__SORTED.SEGMENT_ID
+	nNode	= __NODES__SORTED.NODE_ID
+	oNode	= __NODES__SORTED.OBJ
+
+	If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS) >= nSegment Then
+		If ObjectInfo(moBase, OBJ_INFO_NPOLYGONS + nSegment) >= nNode Then
+'			If DLGUZMUNUpdateValue("XY") Then
+'				fX	= CentroidX(oNode)
+'				fY	= CentroidY(oNode)
+'			Else
+				fX	= ObjectNodeX(moBase, nSegment, nNode)
+				fY	= ObjectNodeY(moBase, nSegment, nNode)
+'			End If
+			If DLGUZMUNUpdateValue("Z") Then
+				fZ	= aZ
+			End If
+			If DLGUZMUNUpdateValue("M") Then
+				fM	= aM
+			End If
+
+'			If ObjectInfo(oNode, OBJ_INFO_HAS_Z) Then
+'				fZ	= ObjectGeography(oNode, OBJ_GEO_POINTZ)
+'			Else
+'				fZ	= 0
+'			End If
+'			If ObjectInfo(oNode, OBJ_INFO_HAS_M) Then
+'				fM	= ObjectGeography(oNode, OBJ_GEO_POINTM)
+'			Else
+'				fM	= 0
+'			End If
+
+			Alter Object moBase
+				Node Set Position nSegment, nNode (fX, fY, fZ, fM)
+		End If
+	End If
+
+'-------------------------
+NextRecord:
+
+	Fetch Next From __NODES__SORTED
+
+	If EOT(__NODES__SORTED) Then
+		If mnRowIDBasePrev > 0 Then
+			Update msBaseTab
+				Set OBJ = moBase
+				Where ROWID = mnRowIDBasePrev
+		End If
+		Progressbar = -1
+	Else
+		Progressbar = nRowIDNodes
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesColumn_Single")
+	Call ERRPrint()
+	GoTo NextRecord
+
+	Exit Sub
+'-------------------------
+FetchRecordError:
+	Call ERRCreate(Err(), Error$(), "DTUpdateZMUsingNodesColumn_Single")
+	Call ERRPrint()
+	GoTo NextRecord
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTOffsetXYZSelection
+
+Dim	sQuery, sUnits, sTempFile, sBaseTab As String,
+	nMID, i As Integer,
+	fX1, fY1, fX2, fY2, fOffsetX, fOffsetY, fOffsetZ As Float
+
+OnError GoTo ErrorOccured
+
+	nMID	= MAPFrontWindow()
+	If nMID = 0 Then
+		Note "Please use the tool in the active map window!"
+		Exit Sub
+	End If
+
+	Set CoordSys Window nMID
+	fX1	= CommandInfo(CMD_INFO_X)
+	fY1	= CommandInfo(CMD_INFO_Y)
+	fX2	= CommandInfo(CMD_INFO_X2)
+	fY2	= CommandInfo(CMD_INFO_Y2)
+
+	sUnits	= MapperInfo(nMID, MAPPER_INFO_DISTUNITS)
+
+	If not DLGOXYZCalculationMethodInitiated() Then
+		Call DLGOXYZSetCalculationMethod(CALC_METHOD_CARTESIAN)	'CALC_METHOD_SPHERICAL
+	End If
+
+	Do Case DLGOXYZCalculationMethod()
+		Case CALC_METHOD_SPHERICAL
+			fOffsetX	= Distance(fX1, fY1, fX2, fY1, sUnits)
+			fOffsetY	= Distance(fX1, fY1, fX1, fY2, sUnits)
+		Case Else
+			fOffsetX	= CartesianDistance(fX1, fY1, fX2, fY1, sUnits)
+			fOffsetY	= CartesianDistance(fX1, fY1, fX1, fY2, sUnits)
+	End Case
+
+	fOffsetX	= IIf(fX1 < fX2, fOffsetX, -1 * fOffsetX)
+	Call DLGOXYZSetOffsetDistance("X", fOffsetX)
+	fOffsetY	= IIf(fY1 < fY2, fOffsetY, -1 * fOffsetY)
+	Call DLGOXYZSetOffsetDistance("Y", fOffsetY)
+
+	sQuery	= SelectionInfo(SEL_INFO_SELNAME)
+	sBaseTab	= SelectionInfo(SEL_INFO_TABLENAME)
+
+	If Not DLGOffsetXYZ(sUnits) Then
+		Close Table sQuery
+		Exit Sub
+	End If
+
+	fOffsetX	= DLGOXYZOffsetDistance("X")
+	fOffsetY	= DLGOXYZOffsetDistance("Y")
+	fOffsetZ	= DLGOXYZOffsetDistance("Z")
+
+	If DLGOXYZCreateCopies() Then
+		sTempFile	= PathToDirectory$(TempFileName$("")) & "__to_copy.tab"
+		If TableInfo(sBaseTab, TAB_INFO_SUPPORT_MZ) Then
+			Commit Table sQuery
+				As sTempFile SupportMZ On
+		Else
+			Commit Table sQuery
+				As sTempFile
+		End If
+		Open Table sTempFile
+
+		For i = 1 To DLGOXYZOffsetTimes()
+			Set Progressbars Off
+			Update __to_copy
+				Set OBJ = OBJMZOffsetXYZ(OBJ, fOffsetX, fOffsetY, fOffsetZ, sUnits, DLGOXYZCalculationMethod())
+			Commit Table __to_copy
+			Set Progressbars On
+			Insert Into sBaseTab
+				Select * From __to_copy
+		Next
+
+		Drop Table __to_copy
+	Else
+		Update sQuery
+			Set OBJ = OBJMZOffsetXYZ(OBJ, fOffsetX, fOffsetY, fOffsetZ, sUnits, DLGOXYZCalculationMethod())
+	End If
+
+	Close Table sQuery
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTOffsetXYZSelection")
+	Call ERRShow()
+
+End Sub
 

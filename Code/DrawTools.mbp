@@ -24,3 +24,5 @@ Module=DLGArrow.mbo
 Module=DLGIsoscelesTrapez.mbo
 Module=DLGSetNodeCoordinate.mbo
 Module=DLGUpdateZMValues.mbo
+Module=DLGUpdateZMUsingNodes.mbo
+Module=DLGOffsetXYZ.mbo

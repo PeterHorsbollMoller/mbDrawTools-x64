@@ -27,6 +27,8 @@ Declare Sub DLGSNCPrevNode_Clicked
 Declare Sub DLGSNCNextNode_Clicked
 Declare Sub DLGSNCDeleteNode_Clicked
 Declare Sub DLGSNCZoomIn_Clicked
+Declare Sub DLGSNCObjectHasZ_Clicked
+Declare Sub DLGSNCObjectHasM_Clicked
 Declare Sub DLGSNCZoomOut_Clicked
 Declare Sub DLGSNCRefreshDialog
 Declare Sub DLGSNCRefreshObject
@@ -142,12 +144,14 @@ DLGSetNodeCoordinate = FALSE
 		Control CheckBox		ID CTRL_CHK_Z
 			Position 5,55
 			Title "&Z:"
+			Calling DLGSNCObjectHasZ_Clicked
 		Control EditText		ID CTRL_TXT_Z
 			Position 5,65		Width 95
 
 		Control CheckBox		ID CTRL_CHK_M
 			Position 110,55
 			Title "&M:"
+			Calling DLGSNCObjectHasM_Clicked
 		Control EditText		ID CTRL_TXT_M
 			Position 110,65		Width 95
 
@@ -397,6 +401,52 @@ End Sub
 'Parameters:
 '
 '**********************************************************************************************''
+Sub DLGSNCObjectHasZ_Clicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_CHK_Z) Then
+		Alter Control CTRL_TXT_Z Enable
+	Else
+		Alter Control CTRL_TXT_Z Disable
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCObjectHasZ_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCObjectHasM_Clicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_CHK_M) Then
+		Alter Control CTRL_TXT_M Enable
+	Else
+		Alter Control CTRL_TXT_M Disable
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCObjectHasM_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
 Sub DLGSNCRefreshDialog
 
 OnError GoTo ErrorOccured
@@ -405,24 +455,43 @@ OnError GoTo ErrorOccured
 	mfY	= ObjectNodeY(moInput, mnSegment, mnNode)
 	If mbSupportMZ Then
 		If ObjectInfo(moInput, OBJ_INFO_HAS_Z) Then
-			Alter Control CTRL_CHK_Z	Value TRUE
-			Alter Control CTRL_CHK_Z	Disable
-			mfZ	= ObjectNodeZ(moInput, mnSegment, mnNode)
+			If ObjectNodeHasZ(moInput, mnSegment, mnNode) Then
+				Alter Control CTRL_CHK_Z	Value TRUE
+				Alter Control CTRL_CHK_Z	Disable
+'				Alter Control CTRL_TXT_Z	Enable
+				mfZ	= ObjectNodeZ(moInput, mnSegment, mnNode)
+			Else
+				Alter Control CTRL_CHK_Z	Value FALSE
+				Alter Control CTRL_CHK_Z	Enable
+'				Alter Control CTRL_TXT_Z	Disable
+				mfZ	= 0.00
+			End If
 		Else
 			Alter Control CTRL_CHK_Z	Value FALSE
 			Alter Control CTRL_CHK_Z	Enable
 			mfZ	= 0.00
 		End If
 		If ObjectInfo(moInput, OBJ_INFO_HAS_M) Then
-			Alter Control CTRL_CHK_M	Value TRUE
-			Alter Control CTRL_CHK_M	Disable
-			mfM	= ObjectNodeM(moInput, mnSegment, mnNode)
+			If ObjectNodeHasM(moInput, mnSegment, mnNode) Then
+				Alter Control CTRL_CHK_M	Value TRUE
+				Alter Control CTRL_CHK_M	Disable
+'				Alter Control CTRL_TXT_M	Enable
+				mfM	= ObjectNodeM(moInput, mnSegment, mnNode)
+			Else
+				Alter Control CTRL_CHK_M	Value FALSE
+				Alter Control CTRL_CHK_M	Enable
+'				Alter Control CTRL_TXT_M	Disable
+				mfM	= 0.00
+			End If
 		Else
 			Alter Control CTRL_CHK_M	Value FALSE
 			Alter Control CTRL_CHK_M	Enable
 			mfM	= 0.00
 		End If
 	End If
+
+	Call DLGSNCObjectHasZ_Clicked
+	Call DLGSNCObjectHasM_Clicked
 
 	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
 '	Alter Control CTRL_TXT_X				Value FormatNumber$(mfX)
@@ -434,7 +503,6 @@ OnError GoTo ErrorOccured
 		Alter Control CTRL_TXT_Z			Value Format$(mfZ, ",0.000000")
 		Alter Control CTRL_TXT_M			Value Format$(mfM, ",0.000000")
 	End If
-
 
 	Alter Object moPoint
 		Geography OBJ_GEO_POINTX, mfX

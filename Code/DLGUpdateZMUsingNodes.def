@@ -1,0 +1,10 @@
+﻿DEFINE	UPDATE_USING_OBJECT		1
+DEFINE	UPDATE_USING_COLUMNS	2
+
+Declare Function DLGUpdateZMUsingNodes(	  ByVal msBaseTab As String
+								, ByVal sNodesTab As String
+								) As Logical
+
+Declare Function DLGUZMUNUpdateUsing() As Logical
+Declare Function DLGUZMUNUpdateValue(ByVal sZorM As String ) As Logical
+Declare Function DLGUZMUNGetColumn(ByVal sZorM As String ) As String

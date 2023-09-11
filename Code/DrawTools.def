@@ -29,3 +29,4 @@ Declare Sub DTSetIconsFile(ByVal sFile As String)
 Declare Sub DTCreateAnglePointAlong
 Declare Sub DTExtractNodesSelection
 Declare Sub DTUpdateZMUsingNodesTable
+Declare Sub DTOffsetXYZSelection

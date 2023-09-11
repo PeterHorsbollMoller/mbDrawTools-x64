@@ -1,0 +1,13 @@
+﻿Declare Function DLGOffsetXYZ(  ByVal sUnits As String
+						) As Logical
+
+Declare Function DLGOXYZOffsetDistance( ByVal sXYZ As String
+								) As Float
+Declare Sub DLGOXYZSetOffsetDistance(	  ByVal sXYZ As String
+								, ByVal fDistance As Float)
+Declare Function DLGOXYZOffsetTimes() As Integer
+Declare Function DLGOXYZCreateCopies() As Logical
+Declare Function DLGOXYZCalculationMethod() As Integer
+Declare Sub DLGOXYZSetCalculationMethod(ByVal nMethod As Integer)	'Use CALC_METHOD_CARTESIAN or CALC_METHOD_SPHERICAL from OBJLib.def
+Declare Function DLGOXYZCalculationMethodInitiated() As Logical
+
