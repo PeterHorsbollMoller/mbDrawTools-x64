@@ -1,0 +1,32 @@
+﻿Define	DLGCC_NUM_TYPES	6
+Define	TYPE_CENTERX		1
+Define	TYPE_CENTERY		2
+Define	TYPE_INNER_RADIUS	3
+Define	TYPE_OUTER_RADIUS	4
+Define	TYPE_DIRECTION		5
+Define	TYPE_WIDTH		6
+
+Define	DLGCC_USE_VALUE	1
+Define	DLGCC_USE_OBJECT	1
+Define	DLGCC_USE_COLUMN	2
+
+Define	DLGCC_ANGLE_TYPE_BEARING	1
+Define	DLGCC_ANGLE_TYPE_MATH	2
+
+Declare Function DLGCreateCell() As Logical
+
+Declare Function DLGCCGetTable() As String
+
+Declare Function DLGCCGetCenterType() As Integer
+Declare Function DLGCCGetInnerRadiusType() As Integer
+Declare Function DLGCCGetOuterRadiusType() As Integer
+Declare Function DLGCCGetDirectionType() As Integer
+Declare Function DLGCCGetWidthType() As Integer
+
+Declare Function DLGCCGetParameterType( ByVal nType As Integer) As String
+Declare Function DLGCCGetColumnName( ByVal nType As Integer) As String
+Declare Function DLGCCGetValue( ByVal nType As Integer) As Float
+
+Declare Function DLGCCGetAngleType() As Integer
+Declare Function DLGCCGetResolution() As Integer
+Declare Function DLGCCGetCalculationMethod() As Integer

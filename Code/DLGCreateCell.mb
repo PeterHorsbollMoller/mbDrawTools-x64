@@ -1,0 +1,832 @@
+﻿'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Precisely
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\ARRAYLib.def"
+Include "Library\COLUMNLib.def"
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\TABLELib.def"
+
+Include "DLGCreateCell.def"
+
+Define	CTRL_LST_TABLES			100
+Define	CTRL_TXT_TABLE_COORDSYS		110
+Define	CTRL_LST_CENTER_TYPE		200
+Define	CTRL_LST_COLUMN_X			210
+Define	CTRL_LST_COLUMN_Y			220
+Define	CTRL_LST_INNER_RADIUS_TYPE	300
+Define	CTRL_LST_COLUMN_INNER_RADIUS	310
+Define	CTRL_TXT_INNER_RADIUS		320
+Define	CTRL_LST_OUTER_RADIUS_TYPE	400
+Define	CTRL_LST_COLUMN_OUTER_RADIUS	410
+Define	CTRL_TXT_OUTER_RADIUS		420
+Define	CTRL_LST_DIRECTION_TYPE		500
+Define	CTRL_LST_COLUMN_DIRECTION	510
+Define	CTRL_TXT_DIRECTION			520
+Define	CTRL_LST_BEARING_ANGLE_TYPE	530
+Define	CTRL_LST_WIDTH_TYPE			600
+Define	CTRL_LST_COLUMN_WIDTH		610
+Define	CTRL_TXT_WIDTH				620
+Define	CTRL_TXT_RESOLUTION			700
+Define	CTRL_LST_CALC_METHOD_TYPE	800
+Define	CTRL_CMD_OK			1000
+
+Declare Sub DLGCCDialogLoad
+Declare Sub DLGCCTableClicked
+Declare Sub DLGCCOKClicked
+Declare Sub DLGCCCenterTypeClicked
+Declare Sub DLGCCInnerRadiusTypeClicked
+Declare Sub DLGCCOuterRadiusTypeClicked
+Declare Sub DLGCCDirectionTypeClicked
+Declare Sub DLGCCWidthTypeClicked
+
+Dim	marrTables(), marrColumns(), marrColumnNameSelected(DLGCC_NUM_TYPES) As String,
+	msTable As String,
+	mnAngleType, mnResolution, mnCalculationMethod, marrValuesEntered(DLGCC_NUM_TYPES), marrTypesSelected(DLGCC_NUM_TYPES) As Integer
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCreateCell() As Logical
+
+OnError GoTo ErrorOccured
+
+DLGCreateCell = FALSE
+
+	If TABGetListOfNames(TAB_USE_ALL_MAPPABLE_BUT_IMAGES - TAB_USE_READONLY, marrTables) = 0 Then
+		Note "Please open at least one mappable editable table!"
+		Exit Function
+	End If
+
+	Dialog
+		Title "Create Cell Sectors"
+		Calling DLGCCDialogLoad
+
+		Control StaticText	Position 5,7
+			Title "Table:"
+		Control PopupMenu	Position 40,5		ID CTRL_LST_TABLES
+			Width 190
+			Title From Variable marrTables
+			Calling DLGCCTableClicked
+		Control StaticText	Position 40,25		ID CTRL_TXT_TABLE_COORDSYS
+			Width 190
+			Title "Projection: "
+
+		'------------------------------
+		Control GroupBox	Position 5,40
+			Width 230		Height 45
+			Title "Center:"
+		Control RadioGroup	Position 15,50		ID CTRL_LST_CENTER_TYPE
+			Title "Object;Columns"
+			Value DLGCCGetCenterType()
+			Calling DLGCCCenterTypeClicked
+		Control StaticText	Position 65,65
+			Title "X:"
+		Control PopupMenu	Position 75,63		ID CTRL_LST_COLUMN_X
+			Width 70
+		Control StaticText	Position 150,65
+			Title "Y:"
+		Control PopupMenu	Position 160,63	ID CTRL_LST_COLUMN_Y
+			Width 70
+
+		'------------------------------
+		Control GroupBox	Position 5,90
+			Width 110		Height 55
+			Title "Inner Radius, m:"
+		Control RadioGroup	Position 15,100		ID CTRL_LST_INNER_RADIUS_TYPE
+			Title "Fixed Value;Column"
+			Value DLGCCGetInnerRadiusType()
+			Calling DLGCCInnerRadiusTypeClicked
+		Control PopupMenu	Position 15,125	ID CTRL_LST_COLUMN_INNER_RADIUS
+			Width 95
+		Control EditText	Position 15,125	ID CTRL_TXT_INNER_RADIUS
+			Width 95
+			Value IIf(DLGCCGetValue(TYPE_INNER_RADIUS) = 0, "", FormatNumber$(DLGCCGetValue(TYPE_INNER_RADIUS)))
+
+		Control GroupBox	Position 125,90
+			Width 110		Height 55
+			Title "Outer Radius, m:"
+		Control RadioGroup	Position 135,100	ID CTRL_LST_OUTER_RADIUS_TYPE
+			Title "Fixed Value;Column"
+			Value DLGCCGetOuterRadiusType()
+			Calling DLGCCOuterRadiusTypeClicked
+		Control PopupMenu	Position 135,125	ID CTRL_LST_COLUMN_OUTER_RADIUS
+			Width 95
+		Control EditText	Position 135,125	ID CTRL_TXT_OUTER_RADIUS
+			Width 95
+			Value IIf(DLGCCGetValue(TYPE_OUTER_RADIUS) = 0, "", FormatNumber$(DLGCCGetValue(TYPE_OUTER_RADIUS)))
+
+		'------------------------------
+		Control GroupBox	Position 5,150
+			Width 110		Height 80
+			Title "Direction:"
+		Control RadioGroup	Position 15,160	ID CTRL_LST_DIRECTION_TYPE
+			Title "Fixed Value;Column"
+			Value DLGCCGetDirectionType()
+			Calling DLGCCDirectionTypeClicked
+		Control PopupMenu	Position 15,185	ID CTRL_LST_COLUMN_DIRECTION
+			Width 95
+		Control EditText	Position 15,185	ID CTRL_TXT_DIRECTION
+			Width 95
+			Value IIf(DLGCCGetValue(TYPE_DIRECTION) = 0, "", FormatNumber$(DLGCCGetValue(TYPE_DIRECTION)))
+		Control RadioGroup	Position 15,200	ID CTRL_LST_BEARING_ANGLE_TYPE
+			Title "Bearing: North=0;Math Angle: East=0"
+			Value DLGCCGetAngleType()
+		Control GroupBox	Position 125,150
+			Width 110		Height 80
+			Title "Width:"
+		Control RadioGroup	Position 135,160	ID CTRL_LST_WIDTH_TYPE
+			Title "Fixed Value;Column"
+			Value DLGCCGetWidthType()
+			Calling DLGCCWidthTypeClicked
+		Control PopupMenu	Position 135,185	ID CTRL_LST_COLUMN_WIDTH
+			Width 95
+		Control EditText	Position 135,185	ID CTRL_TXT_WIDTH
+			Width 95
+			Value IIf(DLGCCGetValue(TYPE_WIDTH) = 0, "", FormatNumber$(DLGCCGetValue(TYPE_WIDTH)))
+
+		'------------------------------
+		Control StaticText Position 5,235
+			Title "Circle Resolution:"
+		Control EditText	Position 5,245		ID CTRL_TXT_RESOLUTION
+			Width 70
+			Value FormatNumber$(DLGCCGetResolution())
+
+		Control StaticText	Position 85,235
+			Title "Calculation Method:"
+		Control RadioGroup	Position 85,245	ID CTRL_LST_CALC_METHOD_TYPE
+			Title "Cartesian;Spherical"
+			Value DLGCCGetCalculationMethod()
+
+		Control OKButton	Position 185,235	ID CTRL_CMD_OK
+			Calling DLGCCOKClicked
+			Width 50
+		Control CancelButton	Position 185,250
+			Width 50
+
+	If not CommandInfo(CMD_INFO_DLG_OK) Then
+		Exit Function
+	End If
+
+DLGCreateCell = TRUE
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCreateCell")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCDialogLoad
+
+OnError GoTo ErrorOccured
+
+	Alter Control CTRL_LST_TABLES	Value 1
+
+	Call DLGCCTableClicked
+
+	Call DLGCCCenterTypeClicked
+	Call DLGCCInnerRadiusTypeClicked
+	Call DLGCCOuterRadiusTypeClicked
+	Call DLGCCDirectionTypeClicked
+	Call DLGCCWidthTypeClicked
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCDialogLoad")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCOKClicked
+
+Dim	nCtrl, nType As Integer
+
+OnError GoTo ErrorOccured
+
+	nCtrl	= ReadControlValue(CTRL_LST_TABLES)
+	msTable	= marrTables(nCtrl)
+
+	marrTypesSelected(TYPE_CENTERX)	= ReadControlValue(CTRL_LST_CENTER_TYPE)
+	If marrTypesSelected(TYPE_CENTERX) = DLGCC_USE_OBJECT Then
+		marrColumnNameSelected(TYPE_CENTERX)	= ""
+		marrColumnNameSelected(TYPE_CENTERY)	= ""
+	Else
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_X)
+		marrColumnNameSelected(TYPE_CENTERX)	= marrColumns(nCtrl)
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_Y)
+		marrColumnNameSelected(TYPE_CENTERY)	= marrColumns(nCtrl)
+	End If
+'	nType = TYPE_CENTERX
+'	Call DEBUGPrint(nType & " " & DLGCCGetParameterType(nType) & " Columns: " & marrColumnNameSelected(nType) & " | " & marrColumnNameSelected(nType + 1))
+
+	marrTypesSelected(TYPE_OUTER_RADIUS)	= ReadControlValue(CTRL_LST_OUTER_RADIUS_TYPE)
+	If marrTypesSelected(TYPE_OUTER_RADIUS) = DLGCC_USE_VALUE Then
+		marrColumnNameSelected(TYPE_OUTER_RADIUS)	= ""
+		marrValuesEntered(TYPE_OUTER_RADIUS)		= Val(DeformatNumber$(ReadControlValue(CTRL_TXT_OUTER_RADIUS)))
+		If marrValuesEntered(TYPE_OUTER_RADIUS) <= 0 Then
+			Note "Please specify an outer radius larger than 0!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_OUTER_RADIUS Active
+			Exit Sub
+		End If
+	Else
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_OUTER_RADIUS)
+		marrColumnNameSelected(TYPE_OUTER_RADIUS)	= marrColumns(nCtrl)
+		marrValuesEntered(TYPE_OUTER_RADIUS)		= 0
+	End If
+'	nType = TYPE_OUTER_RADIUS
+'	Call DEBUGPrint(nType & " " & DLGCCGetParameterType(nType) & " Column: " & marrColumnNameSelected(nType) & " Value: " & marrValuesEntered(nType))
+
+	marrTypesSelected(TYPE_INNER_RADIUS)	= ReadControlValue(CTRL_LST_INNER_RADIUS_TYPE)
+	If marrTypesSelected(TYPE_INNER_RADIUS) = DLGCC_USE_VALUE Then
+		marrColumnNameSelected(TYPE_INNER_RADIUS)	= ""
+		marrValuesEntered(TYPE_INNER_RADIUS)		= Val(DeformatNumber$(ReadControlValue(CTRL_TXT_INNER_RADIUS)))
+
+		If marrValuesEntered(TYPE_INNER_RADIUS) < 0 Then
+			Note "Please specify an inner radius larger than or equal to 0!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_INNER_RADIUS Active
+			Exit Sub
+		ElseIf marrValuesEntered(TYPE_INNER_RADIUS) >= marrValuesEntered(TYPE_OUTER_RADIUS) Then
+			Note "Please specify an inner radius smaller than the outer radius!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_INNER_RADIUS Active
+			Exit Sub
+		End If
+	Else
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_INNER_RADIUS)
+		marrColumnNameSelected(TYPE_INNER_RADIUS)	= marrColumns(nCtrl)
+		marrValuesEntered(TYPE_INNER_RADIUS)		= 0
+	End If
+'	nType = TYPE_INNER_RADIUS
+'	Call DEBUGPrint(nType & " " & DLGCCGetParameterType(nType) & " Column: " & marrColumnNameSelected(nType) & " Value: " & marrValuesEntered(nType))
+
+	marrTypesSelected(TYPE_DIRECTION)	= ReadControlValue(CTRL_LST_DIRECTION_TYPE)
+	If marrTypesSelected(TYPE_DIRECTION) = DLGCC_USE_VALUE Then
+		marrColumnNameSelected(TYPE_DIRECTION)	= ""
+		marrValuesEntered(TYPE_DIRECTION)		= Val(DeformatNumber$(ReadControlValue(CTRL_TXT_DIRECTION)))
+		If marrValuesEntered(TYPE_DIRECTION) > 360 Then
+			Note "Please specify a direction smaller than 360!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_DIRECTION Active
+			Exit Sub
+		End If
+	Else
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_DIRECTION)
+		marrColumnNameSelected(TYPE_DIRECTION)	= marrColumns(nCtrl)
+		marrValuesEntered(TYPE_DIRECTION)		= 0
+	End If
+'	nType = TYPE_DIRECTION
+'	Call DEBUGPrint(nType & " " & DLGCCGetParameterType(nType) & " Column: " & marrColumnNameSelected(nType) & " Value: " & marrValuesEntered(nType))
+
+	marrTypesSelected(TYPE_WIDTH)	= ReadControlValue(CTRL_LST_WIDTH_TYPE)
+	If marrTypesSelected(TYPE_WIDTH) = DLGCC_USE_VALUE Then
+		marrColumnNameSelected(TYPE_WIDTH)	= ""
+		marrValuesEntered(TYPE_WIDTH)		= Val(DeformatNumber$(ReadControlValue(CTRL_TXT_WIDTH)))
+		If marrValuesEntered(TYPE_WIDTH) <= 0 Then
+			Note "Please specify a width larger than 0!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_WIDTH Active
+			Exit Sub
+		ElseIf marrValuesEntered(TYPE_WIDTH) >= 360 Then
+			Note "Please specify a direction smaller than 360!"
+			Dialog Preserve
+			Alter Control CTRL_TXT_WIDTH Active
+			Exit Sub
+		End If
+	Else
+		nCtrl	= ReadControlValue(CTRL_LST_COLUMN_WIDTH)
+		marrColumnNameSelected(TYPE_WIDTH)	= marrColumns(nCtrl)
+		marrValuesEntered(TYPE_WIDTH)		= 0
+	End If
+'	nType = TYPE_WIDTH
+'	Call DEBUGPrint(nType & " " & DLGCCGetParameterType(nType) & " Column: " & marrColumnNameSelected(nType) & " Value: " & marrValuesEntered(nType))
+
+	mnAngleType		= ReadControlValue(CTRL_LST_BEARING_ANGLE_TYPE)
+	mnResolution		= Val(DeformatNumber$(ReadControlValue(CTRL_TXT_RESOLUTION)))
+	mnCalculationMethod	= ReadControlValue(CTRL_LST_CALC_METHOD_TYPE)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCOKClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCTableClicked
+
+Dim	sTab, sCoordsysClause As String,
+	nCol, nProjectionType As Integer
+
+OnError GoTo ErrorOccured
+
+	Alter Control CTRL_CMD_OK	Enable
+
+	sTab	= marrTables(ReadControlValue(CTRL_LST_TABLES))
+	Alter Control CTRL_TXT_TABLE_COORDSYS Title "Projection: " & TableInfo(sTab, TAB_INFO_COORDSYS_NAME)
+
+	sCoordsysClause	= TableInfo(sTab, TAB_INFO_COORDSYS_CLAUSE)
+	Call DEBUGPrint("Coordsys: " & sCoordsysClause)
+	If Left$(sCoordsysClause, Len("CoordSys Earth Projection ")) = "CoordSys Earth Projection " Then
+		sCoordsysClause	= Right$(sCoordsysClause, Len(sCoordsysClause) - Len("CoordSys Earth Projection "))
+		sCoordsysClause	= LTrim$(sCoordsysClause)
+
+		Call DEBUGPrint("Coordsys Parameters: " & sCoordsysClause)
+		nProjectionType	= Val(Left$(sCoordsysClause, InStr(1, sCoordsysClause, ",") - 1))
+		Call DEBUGPrint("Coordsys Projection Type: " & Str$(nProjectionType))
+		If nProjectionType = 1 Then
+			Alter Control CTRL_LST_CALC_METHOD_TYPE	Value 2
+		Else
+			Alter Control CTRL_LST_CALC_METHOD_TYPE	Value 1
+		End If
+	End If
+
+
+	If COLGetListOfNames(sTab, CRITERIA_USE_NUMERICAL, marrColumns) = 0 Then
+		Note "Please select a table with some numerical columns!"
+		Alter Control CTRL_CMD_OK	Disable
+	End If
+
+	Alter Control CTRL_LST_COLUMN_X 			Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_CENTERX))
+	Alter Control CTRL_LST_COLUMN_X 			Value IIf(nCol = 0, 1, nCol)
+
+	Alter Control CTRL_LST_COLUMN_Y 			Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_CENTERY))
+	Alter Control CTRL_LST_COLUMN_Y 			Value IIf(nCol = 0, 1, nCol)
+
+	Alter Control CTRL_LST_COLUMN_INNER_RADIUS 	Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_INNER_RADIUS))
+	Alter Control CTRL_LST_COLUMN_INNER_RADIUS 	Value IIf(nCol = 0, 1, nCol)
+	Alter Control CTRL_LST_COLUMN_OUTER_RADIUS 	Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_OUTER_RADIUS))
+	Alter Control CTRL_LST_COLUMN_OUTER_RADIUS 	Value IIf(nCol = 0, 1, nCol)
+
+	Alter Control CTRL_LST_COLUMN_DIRECTION		Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_DIRECTION))
+	Alter Control CTRL_LST_COLUMN_DIRECTION		Value IIf(nCol = 0, 1, nCol)
+	Alter Control CTRL_LST_COLUMN_WIDTH		Title From Variable marrColumns
+	nCol = ARRAYFindValueString(marrColumns, DLGCCGetColumnName(TYPE_WIDTH))
+	Alter Control CTRL_LST_COLUMN_WIDTH 		Value IIf(nCol = 0, 1, nCol)
+
+	Call DLGCCCenterTypeClicked
+	Call DLGCCInnerRadiusTypeClicked
+	Call DLGCCOuterRadiusTypeClicked
+	Call DLGCCDirectionTypeClicked
+	Call DLGCCWidthTypeClicked
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCTableClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCCenterTypeClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_LST_CENTER_TYPE) = 1 Then
+		Alter Control CTRL_LST_COLUMN_X	Disable
+		Alter Control CTRL_LST_COLUMN_Y	Disable
+	Else
+		Alter Control CTRL_LST_COLUMN_X	Enable
+		Alter Control CTRL_LST_COLUMN_Y	Enable
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCCenterTypeClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCInnerRadiusTypeClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_LST_INNER_RADIUS_TYPE) = 2 Then
+		Alter Control CTRL_LST_COLUMN_INNER_RADIUS	Enable	Show
+		Alter Control CTRL_TXT_INNER_RADIUS		Disable	Hide
+	Else
+		Alter Control CTRL_LST_COLUMN_INNER_RADIUS	Disable	Hide
+		Alter Control CTRL_TXT_INNER_RADIUS		Enable	Show
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCInnerRadiusTypeClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCOuterRadiusTypeClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_LST_OUTER_RADIUS_TYPE) = 2 Then
+		Alter Control CTRL_LST_COLUMN_OUTER_RADIUS	Enable	Show
+		Alter Control CTRL_TXT_OUTER_RADIUS		Disable	Hide
+	Else
+		Alter Control CTRL_LST_COLUMN_OUTER_RADIUS	Disable	Hide
+		Alter Control CTRL_TXT_OUTER_RADIUS		Enable	Show
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCOuterRadiusTypeClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCDirectionTypeClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_LST_DIRECTION_TYPE) = 2 Then
+		Alter Control CTRL_LST_COLUMN_DIRECTION	Enable	Show
+		Alter Control CTRL_TXT_DIRECTION		Disable	Hide
+	Else
+		Alter Control CTRL_LST_COLUMN_DIRECTION	Disable	Hide
+		Alter Control CTRL_TXT_DIRECTION		Enable	Show
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCDirectionTypeClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGCCWidthTypeClicked
+
+OnError GoTo ErrorOccured
+
+	If ReadControlValue(CTRL_LST_WIDTH_TYPE) = 2 Then
+		Alter Control CTRL_LST_COLUMN_WIDTH	Enable	Show
+		Alter Control CTRL_TXT_WIDTH			Disable	Hide
+	Else
+		Alter Control CTRL_LST_COLUMN_WIDTH	Disable	Hide
+		Alter Control CTRL_TXT_WIDTH			Enable	Show
+	End If
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCWidthTypeClicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetTable() As String
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetTable = msTable
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetTable")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetCenterType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetCenterType = DLGCCGetParameterType(TYPE_CENTERX)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetCenterType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetInnerRadiusType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetInnerRadiusType = DLGCCGetParameterType(TYPE_INNER_RADIUS)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetInnerRadiusType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetOuterRadiusType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetOuterRadiusType = DLGCCGetParameterType(TYPE_OUTER_RADIUS)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetOuterRadiusType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetDirectionType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetDirectionType = DLGCCGetParameterType(TYPE_DIRECTION)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetDirectionType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetWidthType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetWidthType = DLGCCGetParameterType(TYPE_WIDTH)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetWidthType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetParameterType( ByVal nType As Integer) As String
+
+OnError GoTo ErrorOccured
+
+DLGCCGetParameterType = 0
+
+	Do Case nType
+		Case TYPE_CENTERX		'1
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_COLUMN, marrTypesSelected(nType))
+		Case TYPE_CENTERY		'2
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_COLUMN, marrTypesSelected(nType))
+		Case TYPE_INNER_RADIUS	'3
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_VALUE, marrTypesSelected(nType))
+		Case TYPE_OUTER_RADIUS	'4
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_VALUE, marrTypesSelected(nType))
+		Case TYPE_DIRECTION		'5
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_COLUMN, marrTypesSelected(nType))
+		Case TYPE_WIDTH		'6
+			DLGCCGetParameterType = IIf(marrTypesSelected(nType) = 0, DLGCC_USE_COLUMN, marrTypesSelected(nType))
+	End Case
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetParameterType")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetColumnName( ByVal nType As Integer) As String
+
+OnError GoTo ErrorOccured
+
+DLGCCGetColumnName = ""
+
+	Do Case nType
+		Case TYPE_CENTERX		'1
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+		Case TYPE_CENTERY		'2
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+		Case TYPE_INNER_RADIUS	'3
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+		Case TYPE_OUTER_RADIUS	'4
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+		Case TYPE_DIRECTION		'5
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+		Case TYPE_WIDTH		'6
+			DLGCCGetColumnName = marrColumnNameSelected(nType)
+	End Case
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetColumnName")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetValue( ByVal nType As Integer) As Float
+
+OnError GoTo ErrorOccured
+
+DLGCCGetValue = 0
+
+	Do Case nType
+		Case TYPE_CENTERX		'1
+			DLGCCGetValue = 0
+		Case TYPE_CENTERY		'2
+			DLGCCGetValue = 0
+		Case TYPE_INNER_RADIUS	'3
+			DLGCCGetValue = marrValuesEntered(nType)
+		Case TYPE_OUTER_RADIUS	'4
+			DLGCCGetValue = marrValuesEntered(nType)
+		Case TYPE_DIRECTION		'5
+			DLGCCGetValue = marrValuesEntered(nType)
+		Case TYPE_WIDTH		'6
+			DLGCCGetValue = marrValuesEntered(nType)
+	End Case
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetValue")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetAngleType() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetAngleType	= IIf(mnAngleType = 0, DLGCC_ANGLE_TYPE_BEARING, mnAngleType)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetResolution")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetResolution() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetResolution	= IIf(mnResolution = 0, 36, mnResolution)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetResolution")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGCCGetCalculationMethod() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGCCGetCalculationMethod	= IIf(mnCalculationMethod = 0, 1, mnCalculationMethod)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGCCGetCalculationMethod")
+	Call ERRShow()
+
+End Function

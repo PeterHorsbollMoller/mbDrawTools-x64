@@ -10,10 +10,11 @@ Include "MapBasic.def"
 Include "Enums.def"
 Include "Icons.def"
 Include "Menu.def"
+Include "RibbonControls.def"
 '**default constants...
 Include "Library\Defaults.def"
-Include "Library\MI_ICONS_X64.def"
-Include "Library\RibbonElements.def"
+'Include "Library\MI_ICONS_X64.def"
+'Include "Library\RibbonElements.def"
 
 '-------------------------------------
 Include "Library\Types\T_MI_POINT.def"
@@ -32,6 +33,7 @@ Include "Library\Dialogs\DLGSelectTable.def"
 Include "DrawTools.def"
 Include "DLGIsoscelesTrapez.def"
 Include "DLGArrow.def"
+Include "DLGCreateCell.def"
 Include "DLGSetNodeCoordinate.def"
 Include "DLGUpdateZMValues.def"
 Include "DLGUpdateZMUsingNodes.def"
@@ -223,9 +225,9 @@ Dim	nCtrlIdx As Integer,
 OnError GoTo ErrorOccured
 
 	sTabName				= TAB_SPATIAL
-	sGroupName			= TAB_GROUP_SPATIAL_EDIT
-	sSplitButtonName		= "CombineDropDown"
-	sSplitButtonGroupName	= "CombineDropDownMenuGroup"
+	sGroupName			= TAB_SPATIAL_EDIT_GRP
+	sSplitButtonName		= BTN_SPATIAL_COMBINE_DROPDOWN	'"CombineDropDown"
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_COMBINE		'"CombineDropDownMenuGroup"
 
 	nCtrlIdx = RBNDropDButtonGroupAddControl("DTCombineIntoNew", "Combine Selected into New", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -239,9 +241,9 @@ OnError GoTo ErrorOccured
 
 
 	sTabName				= TAB_SPATIAL
-	sGroupName			= TAB_GROUP_SPATIAL_EDIT
-	sSplitButtonName		= "TransformSplitButton"
-	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
+	sGroupName			= TAB_SPATIAL_EDIT_GRP
+	sSplitButtonName		= BTN_SPATIAL_TRANSFORM_SPLIT
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_TRANSFORM
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -272,9 +274,9 @@ OnError GoTo ErrorOccured
 	End If
 
 '	sTabName				= TAB_SPATIAL
-'	sGroupName			= TAB_GROUP_SPATIAL_EDIT
-'	sSplitButtonName		= "TransformSplitButton"
-'	sSplitButtonGroupName	= "TransformDropdownMenuGroup"
+'	sGroupName			= TAB_SPATIAL_EDIT_GRP
+'	sSplitButtonName		= BTN_SPATIAL_TRANSFORM_SPLIT	'"TransformSplitButton"
+'	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_TRANSFORM	'"TransformDropdownMenuGroup"
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTOffsetXYZSelection", "Offset in XYZ", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -292,9 +294,9 @@ OnError GoTo ErrorOccured
 
 
 	sTabName				= TAB_SPATIAL
-	sGroupName			= TAB_GROUP_SPATIAL_EDIT
-	sSplitButtonName		= "NodesSplitButton"
-	sSplitButtonGroupName	= "NodesSplitButtonMenuGroup"
+	sGroupName			= TAB_SPATIAL_EDIT_GRP
+	sSplitButtonName		= BTN_SPATIAL_NODES_SPLIT
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_NODES
 
 '	nCtrlIdx = RBNSplitButtonGroupAddControl("sepNodesSplitButton", "", "", ControlType_ContextMenuSeparator, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 
@@ -406,9 +408,9 @@ OnError GoTo ErrorOccured
 '	End If
 
 	sTabName				= TAB_SPATIAL
-	sGroupName			= TAB_GROUP_SPATIAL_CREATE		'SpatialCreateBar
-	sSplitButtonName		= "SpatialCreateInsertSplitButton"
-	sSplitButtonGroupName	= "InsertRegionsMenuGroup"
+	sGroupName			= TAB_SPATIAL_CREATE_GRP			'SpatialCreateBar
+	sSplitButtonName		= BTN_SPATIAL_INSERT_SPLIT		'"SpatialCreateInsertSplitButton"
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_INSERT_REGIONS	'"InsertRegionsMenuGroup"
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -453,7 +455,25 @@ OnError GoTo ErrorOccured
 	End If
 
 	sTabName				= TAB_SPATIAL
-	sGroupName			= TAB_GROUP_SPATIAL_CREATE
+	sGroupName			= TAB_SPATIAL_CREATE_GRP
+	sSplitButtonName		= BTN_SPATIAL_CREATE_REGIONS_SPLIT
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_SPATIAL_REGIONS
+
+'	nCtrlIdx = RBNSplitButtonGroupAddControl("sepNodesSplitButton", "", "", ControlType_ContextMenuSeparator, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateCells", "Create Cell Sectors", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Create Cells Site Sectors from a table", "")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\Sector_64.png")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTCreateCells")
+	End If
+
+
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_SPATIAL_CREATE_GRP
 
 	nCtrlIdx = RBNGroupInsertControlBefore("DTExtractNodesSelection", "Extract Nodes", "", ControlType_Button, sTabName, sGroupName, "GeoCodeSplitButton")
 	If nCtrlIdx > 0 Then
@@ -570,6 +590,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateCells", FALSE)
 		Exit Sub
 	Else
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
@@ -589,6 +610,7 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateCells", TRUE)
 	End If
 
 	nWID		= FrontWindow()
@@ -951,7 +973,7 @@ Sub DTNodeSetCoordinate
 
 Dim	oExisting, oPoint As Object,
 	nSegment, nNode As Integer,
-	fX, fY, fTolerance As Float,
+	fX, fY, fTolerance, fZoom As Float,
 	sBaseTab As String
 
 OnError GoTo ErrorOccured
@@ -973,9 +995,13 @@ OnError GoTo ErrorOccured
 			Exit Sub
 	End Case
 
-	fTolerance	= 1	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+	Set Distance Units "m"
+	fZoom		= MapperInfo(FrontWindow(), MAPPER_INFO_ZOOM)
+'	fTolerance	= 1	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+	fTolerance	= fZoom / 100
 	If not OBJFindSegmentAndNode(oExisting, oPoint, fTolerance, nSegment, nNode) Then
-		fTolerance	= 10	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+'		fTolerance	= 10	'meters	//TODO: Change the tolerance to depend on the the map zoom, say 1/100 or 1/1000 of the map width
+		fTolerance	= fTolerance * 10
 		If not OBJFindSegmentAndNode(oExisting, oPoint, fTolerance, nSegment, nNode) Then
 
 			Note "Try to click a bit closer to the node you want to modify!"
@@ -983,6 +1009,9 @@ OnError GoTo ErrorOccured
 			Exit Sub
 		End If
 	End If
+
+	Call DEBUGPrint("DTNodeSetCoordinate, Num Segments: " & FormatNumber$(ObjectInfo(oExisting, OBJ_INFO_NPOLYGONS)))
+	Call DEBUGPrint("DTNodeSetCoordinate, Num Nodes: " & FormatNumber$(ObjectInfo(oExisting, OBJ_INFO_NPNTS)))
 
 	sBaseTab	= SelectionInfo(SEL_INFO_TABLENAME)
 	If not DLGSetNodeCoordinate(oExisting, nSegment, nNode, TableInfo(sBaseTab, TAB_INFO_SUPPORT_MZ)) Then
@@ -2254,6 +2283,109 @@ OnError GoTo ErrorOccured
 '-------------------------
 ErrorOccured:
 	Call ERRCreate(Err(), Error$(), "DTOffsetXYZSelection")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTCreateCells
+
+Dim	sCmd As String,
+	bCreateAnnulusSector, sCoordSys As String
+
+OnError GoTo ErrorOccured
+
+	If Not DLGCreateCell() Then
+		Exit Sub
+	End If
+
+	sCmd = "Update " & DLGCCGetTable()
+			& " Set OBJ = "
+
+
+'	OBJCreateAnnulusSector( oCenter
+'						, fDirection As Float			'360 degrees
+'						, fRadiusInner As Float			'meters
+'						, fRadiusOuter As Float			'meters
+'						, fAngleWidth As Float			' > 0 AND < 360
+'						, nResolution As Integer		'A value between 3 and 500, number of nodes to describe a 360 full circle
+'						, nCalculationMethod As Integer	'CALC_METHOD_CARTESIAN / CALC_METHOD_SPHERICAL
+'						) As Object
+'	OBJCreateCircularSector( oCenter As Object
+'						, fDirection As Float			'360 degrees
+'						, fRadius As Float				'meters
+'						, fAngleWidth As Float			' > 0 AND < 360
+'						, nResolution As Integer		'A value between 3 and 500, number of nodes to describe a 360 full circle
+'						, nCalculationMethod As Integer	'CALC_METHOD_CARTESIAN / CALC_METHOD_SPHERICAL
+'						) As Object
+
+	bCreateAnnulusSector	= DLGCCGetInnerRadiusType() = DLGCC_USE_VALUE And DLGCCGetValue(TYPE_INNER_RADIUS) = 0
+
+	If bCreateAnnulusSector Then
+		sCmd = sCmd & "DTCreateAnnulusSector("
+	Else
+		sCmd = sCmd & "DTCreateCircularSector("
+	End If
+
+	If DLGCCGetCenterType() = DLGCC_USE_OBJECT Then
+		sCmd = sCmd & "OBJ "
+	Else
+		sCmd = sCmd & "CreatePoint(" & DLGCCGetColumnName(TYPE_CENTERX) & ", " & DLGCCGetColumnName(TYPE_CENTERY) & ") "
+	End If
+
+	If DLGCCGetDirectionType() = DLGCC_USE_VALUE Then
+		If DLGCCGetAngleType() = DLGCC_ANGLE_TYPE_BEARING Then
+			sCmd = sCmd & ", DTNorth2MathAngle(" & Str$(DLGCCGetValue(TYPE_DIRECTION)) & ")"
+		Else
+			sCmd = sCmd & ", " & Str$(DLGCCGetValue(TYPE_DIRECTION))
+		End If
+	Else
+		If DLGCCGetAngleType() = DLGCC_ANGLE_TYPE_BEARING Then
+			sCmd = sCmd & ", DTNorth2MathAngle(" & DLGCCGetColumnName(TYPE_DIRECTION) & ")"
+		Else
+			sCmd = sCmd & ", " & DLGCCGetColumnName(TYPE_DIRECTION)
+		End If
+	End If
+
+
+	If bCreateAnnulusSector Then
+		If DLGCCGetInnerRadiusType() = DLGCC_USE_VALUE Then
+			sCmd = sCmd & ", " & Str$(DLGCCGetValue(TYPE_INNER_RADIUS))
+		Else
+			sCmd = sCmd & ", " & DLGCCGetColumnName(TYPE_INNER_RADIUS)
+		End If
+	End If
+
+	If DLGCCGetOuterRadiusType() = DLGCC_USE_VALUE Then
+		sCmd = sCmd & ", " & Str$(DLGCCGetValue(TYPE_OUTER_RADIUS))
+	Else
+		sCmd = sCmd & ", " & DLGCCGetColumnName(TYPE_OUTER_RADIUS)
+	End If
+
+	If DLGCCGetWidthType() = DLGCC_USE_VALUE Then
+		sCmd = sCmd & ", " & Str$(DLGCCGetValue(TYPE_WIDTH))
+	Else
+		sCmd = sCmd & ", " & DLGCCGetColumnName(TYPE_WIDTH)
+	End If
+
+	sCmd = sCmd & ", " & Str$(DLGCCGetResolution())
+			& ", " & Str$(DLGCCGetCalculationMethod())
+			& ")"
+
+	Call DEBUGPrint(sCmd)
+	sCoordSys	= SessionInfo(SESSION_INFO_COORDSYS_CLAUSE)
+	Run Command "Set Coordsys Table " & DLGCCGetTable()
+	Run Command sCmd
+	Run Command "Set " & sCoordSys
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTCreateCells")
 	Call ERRShow()
 
 End Sub

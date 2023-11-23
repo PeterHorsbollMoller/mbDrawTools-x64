@@ -30,3 +30,4 @@ Declare Sub DTCreateAnglePointAlong
 Declare Sub DTExtractNodesSelection
 Declare Sub DTUpdateZMUsingNodesTable
 Declare Sub DTOffsetXYZSelection
+Declare Sub DTCreateCells

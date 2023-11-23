@@ -21,6 +21,7 @@ Module=Library\Dialogs\DLGSelectTable.mbo
 Module=DrawToolsMenu.mbo
 Module=DrawTools.mbo
 Module=DLGArrow.mbo
+Module=DLGCreateCell.mbo
 Module=DLGIsoscelesTrapez.mbo
 Module=DLGSetNodeCoordinate.mbo
 Module=DLGUpdateZMValues.mbo

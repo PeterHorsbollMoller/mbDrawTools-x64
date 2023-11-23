@@ -1,0 +1,1 @@
+14:00:58 Update Cell_Towers Set OBJ = DTCreateAnnulusSector(CreatePoint(UTM_E, ), Bearing, , , SpreadAngle, , 36, 1)

@@ -40,12 +40,13 @@
 '								- DTUpdateZMUsingNodesTable: Updates nodes using points in a nodes table
 '	16-08-2023 08:01:58 3.0.7	Added dialog to control updating MZ values using nodes: DLGUpdateZMUsingNodes
 '							Added Dialog around OffsetXYZ to offset selected objects and/or create copies of selected objects through a line tool
+'	21-11-2023 10:37:10	3.1.0	Added Dialog for AnnulusSector and CircularSector to create it from a table
+'							Support objects with multiple sections in the Alter Nodes dialog
+'							Delete current polygon/polyline section in the Alter Nodes dialog (https://ideas.precisely.com/ideas/MIPRO-I-70)
 '*******************************************************************************
-'	Support objects with multiple sections in the Alter Nodes dialog
-'	Delete current polygon/polyline section in the Alter Nodes dialog (https://ideas.precisely.com/ideas/MIPRO-I-70)
+'	Add a new Node before/after current node ( on the line mid between the two nodes)
 '	Tool for AnnulusSector and CircularSector to create it from a tool
-'	Dialog for AnnulusSector and CircularSector to create it from a table
-'	Create a arrow from a simple line or two points where the arrow is rounded off to the left or right side
+'	Create an arrow from a simple line or two points where the arrow is rounded off to the left or right side
 '*******************************************************************************
 
 '-------------------------------------
@@ -57,7 +58,7 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"3.0.7"
+Define xVersion 		"3.1.0"
 Define xYear			"2023"
 Define xAddToMenuBar	FALSE
 

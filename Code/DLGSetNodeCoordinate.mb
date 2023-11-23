@@ -23,6 +23,9 @@ Include "DLGSetNodeCoordinate.def"
 
 Declare Sub DLGSNCDialog_OnLoad
 Declare Sub DLGSNCOK_Clicked
+Declare Sub DLGSNCPrevSegment_Clicked
+Declare Sub DLGSNCNextSegment_Clicked
+Declare Sub DLGSNCDeleteSegment_Clicked
 Declare Sub DLGSNCPrevNode_Clicked
 Declare Sub DLGSNCNextNode_Clicked
 Declare Sub DLGSNCDeleteNode_Clicked
@@ -33,10 +36,14 @@ Declare Sub DLGSNCZoomOut_Clicked
 Declare Sub DLGSNCRefreshDialog
 Declare Sub DLGSNCRefreshObject
 
-Define	CTRL_LBL_SEGMENT_NODE		100
-Define	CTRL_CMD_DELETE_NODE		200
-Define	CTRL_CMD_PREV_NODE			310
-Define	CTRL_CMD_NEXT_NODE			310
+Define	CTRL_LBL_NODE				100
+Define	CTRL_CMD_DELETE_NODE		120
+Define	CTRL_CMD_PREV_NODE			130
+Define	CTRL_CMD_NEXT_NODE			140
+Define	CTRL_LBL_SEGMENT			200
+Define	CTRL_CMD_DELETE_SEGMENT		220
+Define	CTRL_CMD_PREV_SEGMENT		230
+Define	CTRL_CMD_NEXT_SEGMENT		240
 Define	CTRL_TXT_X				400
 Define	CTRL_TXT_Y				410
 Define	CTRL_TXT_Z				420
@@ -70,10 +77,16 @@ OnError GoTo ErrorOccured
 
 DLGSetNodeCoordinate = FALSE
 
+	Call DEBUGPrint("DLGSetNodeCoordinate A, Num Segments: " & FormatNumber$(ObjectInfo(oInput, OBJ_INFO_NPOLYGONS)))
+	Call DEBUGPrint("DLGSetNodeCoordinate A, Num Nodes: " & FormatNumber$(ObjectInfo(oInput, OBJ_INFO_NPNTS)))
+
 	mnSegment		= nSegment
 	mnNode		= nNode
 	moInput		= oInput
 	mbSupportMZ	= bSupportMZ
+
+	Call DEBUGPrint("DLGSetNodeCoordinate B, Num Segments: " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS)))
+	Call DEBUGPrint("DLGSetNodeCoordinate B, Num Nodes: " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPNTS)))
 
 	mpenTemp		= MakePen (4, 3, 16711935)
 	mpenOrig		= objectInfo(moInput, OBJ_INFO_PEN)
@@ -112,64 +125,85 @@ DLGSetNodeCoordinate = FALSE
 		Title "Set Node Coordinate"
 		Calling DLGSNCDialog_OnLoad
 
-		Control StaticText		ID CTRL_LBL_SEGMENT_NODE
-			Position 5,7		Width 115
-			Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+		'**Segment controls
+		Control StaticText		ID CTRL_LBL_SEGMENT
+			Position 5,7		Width 80
+			Title "Segment " & FormatNumber$(mnSegment) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS))
+
+		Control Button			ID CTRL_CMD_DELETE_SEGMENT
+			Position 90,5		Width 60
+			Title "Delete Segment"
+			Calling DLGSNCDeleteSegment_Clicked
+
+		Control Button			ID CTRL_CMD_PREV_SEGMENT
+			Position 160,5		Width 20
+			Title "<"
+			Calling DLGSNCPrevSegment_Clicked
+		Control Button			ID CTRL_CMD_NEXT_SEGMENT
+			Position 185,5		Width 20
+			Title ">"
+			Calling DLGSNCNextSegment_Clicked
+
+		'**Node controls
+		Control StaticText		ID CTRL_LBL_NODE
+			Position 5,22		Width 80
+			Title "Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
 
 		Control Button			ID CTRL_CMD_DELETE_NODE
-			Position 120,5		Width 30
-			Title "Delete"
+			Position 90,20	Width 60
+			Title "Delete Node"
 			Calling DLGSNCDeleteNode_Clicked
 
 		Control Button			ID CTRL_CMD_PREV_NODE
-			Position 160,5		Width 20
+			Position 160,20	Width 20
 			Title "&<"
 			Calling DLGSNCPrevNode_Clicked
 		Control Button			ID CTRL_CMD_NEXT_NODE
-			Position 185,5		Width 20
+			Position 185,20	Width 20
 			Title "&>"
 			Calling DLGSNCNextNode_Clicked
 
+		'**Node Values
 		Control StaticText
-			Position 5,25
+			Position 5,45
 			Title "&X:"
 		Control EditText		ID CTRL_TXT_X
-			Position 5,35		Width 95
+			Position 5,55		Width 95
 		Control StaticText
-			Position 110,25
+			Position 110,45
 			Title "&Y:"
 		Control EditText		ID CTRL_TXT_Y
-			Position 110,35		Width 95
+			Position 110,55	Width 95
 
 		Control CheckBox		ID CTRL_CHK_Z
-			Position 5,55
+			Position 5,75
 			Title "&Z:"
 			Calling DLGSNCObjectHasZ_Clicked
 		Control EditText		ID CTRL_TXT_Z
-			Position 5,65		Width 95
+			Position 5,85		Width 95
 
 		Control CheckBox		ID CTRL_CHK_M
-			Position 110,55
+			Position 110,75
 			Title "&M:"
 			Calling DLGSNCObjectHasM_Clicked
 		Control EditText		ID CTRL_TXT_M
-			Position 110,65		Width 95
+			Position 110,85		Width 95
 
 		Control Button
-			Position 5,85		Width 40
+			Position 5,105		Width 40
 			Title "Zoom &In"
 			Calling DLGSNCZoomIn_Clicked
 		Control Button
-			Position 50,85		Width 40
+			Position 50,105		Width 40
 			Title "Zoom &Out"
 			Calling DLGSNCZoomOut_Clicked
 
 		Control OKButton
-			Position 120,85		Width 40
+			Position 120,105		Width 40
 			Title "Save"
 			Calling DLGSNCOK_Clicked
 		Control CancelButton
-			Position 165,85	Width 40
+			Position 165,105	Width 40
 
 	If not CommandInfo(CMD_INFO_DLG_OK) Then
 		Drop Table __NODE__CHANGER
@@ -246,6 +280,118 @@ End Sub
 'Parameters:
 '
 '**********************************************************************************************''
+Sub DLGSNCPrevSegment_Clicked
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshObject
+
+	mnSegment	= mnSegment - 1
+	mnNode	= mnNode
+	If mnSegment <= 0 Then
+		mnSegment = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS)
+	End If
+	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCPrevSegment_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCNextSegment_Clicked
+
+OnError GoTo ErrorOccured
+
+	Call DLGSNCRefreshObject
+
+	mnSegment	= mnSegment + 1
+	mnNode	= mnNode
+	If mnSegment > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS) Then
+		mnSegment = 1
+	End If
+	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCNextSegment_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DLGSNCDeleteSegment_Clicked
+
+Dim	nNodeRemove, nNodeMin, nNumNodes As Integer
+
+OnError GoTo ErrorOccured
+
+	If Ask("Do you really want to delete segment " & FormatNumber$(mnSegment) & " and its " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)) & " nodes?", "No", "Yes") Then
+		Exit Sub
+	End If
+
+	If ObjectInfo(moInput, OBJ_INFO_TYPE) = OBJ_TYPE_PLINE Then
+		nNodeMin	= 2
+	Else
+		nNodeMin	= 4
+	End If
+
+	nNumNodes	= ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	For nNodeRemove = nNumNodes To nNodeMin Step -1
+		Print "Delete " & nNodeRemove & " of " & ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+		Alter Object moInput
+			Node Remove Position mnSegment, nNodeRemove
+	Next
+
+	Alter Object moInput
+		Info OBJ_INFO_PEN, mpenTemp
+
+	Update __NODE__CHANGER
+		Set OBJ = moInput
+		Where ROWID = 1
+
+	If mnSegment > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS) Then
+		mnSegment = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS)
+	End If
+	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+	End If
+
+	Call DLGSNCRefreshDialog
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGSNCNextNode_Clicked")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
 Sub DLGSNCPrevNode_Clicked
 
 OnError GoTo ErrorOccured
@@ -255,7 +401,7 @@ OnError GoTo ErrorOccured
 	mnSegment	= mnSegment
 	mnNode	= mnNode - 1
 	If mnNode <= 0 Then
-		mnNode = 1
+		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
 	End If
 
 	Call DLGSNCRefreshDialog
@@ -282,7 +428,7 @@ OnError GoTo ErrorOccured
 	mnSegment	= mnSegment
 	mnNode	= mnNode + 1
 	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
-		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
+		mnNode = 1
 	End If
 
 	Call DLGSNCRefreshDialog
@@ -338,6 +484,9 @@ OnError GoTo ErrorOccured
 		Where ROWID = 1
 
 	mnSegment	= mnSegment
+	If mnSegment > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS) Then
+		mnSegment = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS)
+	End If
 	mnNode	= nNextNode
 	If mnNode > ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) Then
 		mnNode = ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment)
@@ -352,7 +501,6 @@ ErrorOccured:
 	Call ERRShow()
 
 End Sub
-
 
 '**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes
@@ -493,15 +641,33 @@ OnError GoTo ErrorOccured
 	Call DLGSNCObjectHasZ_Clicked
 	Call DLGSNCObjectHasM_Clicked
 
-	Alter Control CTRL_LBL_SEGMENT_NODE	Title "Segment " & FormatNumber$(mnSegment) & " - Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
-'	Alter Control CTRL_TXT_X				Value FormatNumber$(mfX)
-	Alter Control CTRL_TXT_X				Value Format$(mfX, ",0.000000")
-'	Alter Control CTRL_TXT_Y				Value FormatNumber$(mfY)
-	Alter Control CTRL_TXT_Y				Value Format$(mfY, ",0.000000")
+	Alter Control CTRL_LBL_SEGMENT	Title "Segment " & FormatNumber$(mnSegment) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS))
+	Alter Control CTRL_LBL_NODE		Title "Node " & FormatNumber$(mnNode) & " of " & FormatNumber$(ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment))
+	Alter Control CTRL_TXT_X			Value Format$(mfX, ",0.000000")
+	Alter Control CTRL_TXT_Y			Value Format$(mfY, ",0.000000")
 
 	If mbSupportMZ Then
-		Alter Control CTRL_TXT_Z			Value Format$(mfZ, ",0.000000")
-		Alter Control CTRL_TXT_M			Value Format$(mfM, ",0.000000")
+		Alter Control CTRL_TXT_Z		Value Format$(mfZ, ",0.000000")
+		Alter Control CTRL_TXT_M		Value Format$(mfM, ",0.000000")
+	End If
+
+	If ObjectInfo(moInput, OBJ_INFO_NPOLYGONS) = 1 Then
+		Alter Control CTRL_CMD_DELETE_SEGMENT Disable
+		If ObjectInfo(moInput, OBJ_INFO_TYPE) = OBJ_TYPE_PLINE Then
+			If ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) < 3 Then
+				Alter Control CTRL_CMD_DELETE_NODE Disable
+			Else
+				Alter Control CTRL_CMD_DELETE_NODE Enable
+			End If
+		Else
+			If ObjectInfo(moInput, OBJ_INFO_NPOLYGONS + mnSegment) < 5 Then
+				Alter Control CTRL_CMD_DELETE_NODE Disable
+			Else
+				Alter Control CTRL_CMD_DELETE_NODE Enable
+			End If
+		End If
+	Else
+		Alter Control CTRL_CMD_DELETE_SEGMENT Enable
 	End If
 
 	Alter Object moPoint
@@ -555,8 +721,8 @@ OnError GoTo ErrorOccured
 	fX	= DeformatNumber$(sX)
 	fY	= DeformatNumber$(sY)
 
-	fZ	= DeformatNumber$(sZ)
-	fM	= DeformatNumber$(sM)
+	fZ	= IIf(sZ = "", 0, DeformatNumber$(sZ))
+	fM	= IIf(sM = "", 0, DeformatNumber$(sM))
 
 	If mbSupportMZ And SystemInfo(SYS_INFO_MIVERSION) >= 2300 Then
 		If ReadControlValue(CTRL_CHK_Z) And ReadControlValue(CTRL_CHK_M) Then
