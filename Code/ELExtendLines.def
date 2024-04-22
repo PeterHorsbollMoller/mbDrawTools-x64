@@ -1,0 +1,13 @@
+﻿Declare Sub ELDrawAndExtendPolylineTool
+
+Declare Function ELCreateLineToIntersection(	  ByVal oFromPline As Object			'One-segment polyline
+									, ByVal nFromStartOrEnd As Integer		'1 = Start Segment, 2 = End Segment
+									, ByVal oToPline As Object			'multi-point polyline
+									, ByVal fDistanceTolerance As Float	'Search distance
+									, ByVal sDistanceUnits As String		'Distance units
+									) As Object
+Declare Function ELCreateLineExtension(	  ByVal oFromPline As Object			'One-segment polyline
+								, ByVal nFromStartOrEnd As Integer		'1 = Start Segment, 2 = End Segment
+								, ByVal fLength As Float				'Length of Line Extension
+								, ByVal sDistanceUnits As String		'Distance units
+								) As Object

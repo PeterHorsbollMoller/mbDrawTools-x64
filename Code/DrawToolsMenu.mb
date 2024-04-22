@@ -43,10 +43,18 @@
 '	21-11-2023 10:37:10	3.1.0	Added Dialog for AnnulusSector and CircularSector to create it from a table
 '							Support objects with multiple sections in the Alter Nodes dialog
 '							Delete current polygon/polyline section in the Alter Nodes dialog (https://ideas.precisely.com/ideas/MIPRO-I-70)
+'	17-04-2024 14:32:43	3.1.1	Added tool that will extend drawn line to intersection with objects in the editable layer
+'	19-04-2024 07:40:27	3.1.2	Moved functions for extending polyline to intersection to OBJLib
+'	22-04-2024 10:05:08 3.1.3	Initial Create Point Buffer tool
 '*******************************************************************************
-'	Add a new Node before/after current node ( on the line mid between the two nodes)
-'	Tool for AnnulusSector and CircularSector to create it from a tool
-'	Create an arrow from a simple line or two points where the arrow is rounded off to the left or right side
+'	Add a new Node before/after current node ( on the line mid between the two nodes) in Set Node Coordinates dialog
+'	Create an arrow from a simple line or two points where the arrow goes into a "spline" to the left or right side
+'	Tool to remove spikes from polylines/polygons, see https://ideas.precisely.com/ideas/MIPRO-I-1265
+'	Ensure DTExtractNodesSelection only works on objects with nodes
+'	Add AnnulusSector Tool
+'	Add CircularSector Tool
+'	Add Point Buffer Tool
+'	Add Dougnut Tool
 '*******************************************************************************
 
 '-------------------------------------
@@ -58,8 +66,8 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"3.1.0"
-Define xYear			"2023"
+Define xVersion 		"3.1.3"
+Define xYear			"2024"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".ini"

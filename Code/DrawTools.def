@@ -22,7 +22,6 @@ Declare Sub DTDrawArrow
 Declare Sub DTDrawIsoscelesTrapez
 Declare Sub DTSplitPolygonIntoHalf
 
-
 Declare Function DTGetIconsFile() As String
 Declare Sub DTSetIconsFile(ByVal sFile As String)
 
@@ -31,3 +30,6 @@ Declare Sub DTExtractNodesSelection
 Declare Sub DTUpdateZMUsingNodesTable
 Declare Sub DTOffsetXYZSelection
 Declare Sub DTCreateCells
+
+Declare Sub DTDrawAndExtendPolyline
+Declare Sub DTDrawPointBuffer

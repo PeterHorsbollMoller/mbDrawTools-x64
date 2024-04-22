@@ -38,6 +38,7 @@ Include "DLGSetNodeCoordinate.def"
 Include "DLGUpdateZMValues.def"
 Include "DLGUpdateZMUsingNodes.def"
 Include "DLGOffsetXYZ.def"
+'Include "ELExtendLines.def"
 
 Declare Sub DTUpdateZMUsingNodesObject_Single
 Declare Sub DTUpdateZMUsingNodesColumn_Single
@@ -410,6 +411,25 @@ OnError GoTo ErrorOccured
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_SPATIAL_CREATE_GRP			'SpatialCreateBar
 	sSplitButtonName		= BTN_SPATIAL_INSERT_SPLIT		'"SpatialCreateInsertSplitButton"
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_INSERTLINES	'"InsertLinesMenuGroup"
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawAndExtendPolyline", "Extending Polyline", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a polyline that extends to intersection with a objects in another table.", "Make sure you have an editable layer in the active map window.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PLineExtending_64.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_POLYLINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawAndExtendPolyline")
+	End If
+
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_SPATIAL_CREATE_GRP			'SpatialCreateBar
+	sSplitButtonName		= BTN_SPATIAL_INSERT_SPLIT		'"SpatialCreateInsertSplitButton"
 	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_INSERT_REGIONS	'"InsertRegionsMenuGroup"
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTCreateGaps", "Add Gaps", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
@@ -452,6 +472,20 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
 		'Set Custom MapBasic Handle to the button
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawIsoscelesTrapez")
+	End If
+
+	nCtrlIdx = RBNSplitButtonGroupAddControl("DTDrawPointBuffer", "Point Buffer", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Draw a Point Buffer using size details", "Make sure you have an editable layer in the active map window.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, "", ApplicationDirectory$() & "Images\PointBuffer_64.png")
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTDrawPointBuffer")
 	End If
 
 	sTabName				= TAB_SPATIAL
@@ -591,6 +625,9 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateCells", FALSE)
+'		Print "A Disabling 'DTDrawAndExtendPolyline'"
+		Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 		Exit Sub
 	Else
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
@@ -611,6 +648,8 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateCells", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", TRUE)
 	End If
 
 	nWID		= FrontWindow()
@@ -645,9 +684,14 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
+'		Print "B Disabling 'DTDrawAndExtendPolyline'"
+		Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 	Else
 		If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
 			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -660,9 +704,14 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCombineIntoNew", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTCreateGaps", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTDrawArrow", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTDrawIsoscelesTrapez", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
+'			Print "C Disabling 'DTDrawAndExtendPolyline'"
+			Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 		Else
 			nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
 			If nEditLayerID < 1 Then
@@ -681,6 +730,9 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
+'				Print "D Disabling 'DTDrawAndExtendPolyline'"
+				Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 			Else
 				If LayerInfo(nWID, nEditLayerID, LAYER_INFO_NAME) <> SelectionInfo(SEL_INFO_TABLENAME) Then
 					Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
@@ -2386,6 +2438,155 @@ OnError GoTo ErrorOccured
 '-------------------------
 ErrorOccured:
 	Call ERRCreate(Err(), Error$(), "DTCreateCells")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTDrawAndExtendPolyline
+
+Dim	oDrawnPline, oSegment, oToPline, oNewLine, oShortestLine As Object,
+	fX, fY, fTolerance, fShortestLength As Float,
+	nWID, nNumPnts, nFromStartOrEnd, nNode As Integer,
+	sTab As String
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+	sTab	= MAPGetEditLayerName(nWID)
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+	Set CoordSys Table sTab
+
+	fTolerance	= 10	'meters
+
+	oDrawnPline	= CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+	For nFromStartOrEnd = 1 To 2
+		oNewLine	= OBJCreateLineExtension(oDrawnPline, IIf(nFromStartOrEnd = 1, OBJ_FIRST_SEGMENT, OBJ_LAST_SEGMENT), fTolerance, "m", CALC_METHOD_CARTESIAN)
+		Select * From sTab
+			Where OBJ Intersects oNewLine
+			Into __Extent_To NoSelect Hide
+
+'		Print nFromStartOrEnd & " Found " & TableInfo(__Extent_To, TAB_INFO_NROWS) & " records from tables ROADS"
+
+		fShortestLength	= fTolerance * 10
+		Fetch First From __Extent_To
+		Do Until EOT(__Extent_To)
+			oToPline	= __Extent_To.OBJ
+
+			oNewLine	= OBJCreateLineToIntersection(oDrawnPline, IIf(nFromStartOrEnd = 1, OBJ_FIRST_SEGMENT, OBJ_LAST_SEGMENT), oToPline, fTolerance, "m", CALC_METHOD_CARTESIAN)
+			If not ObjectInfo(oNewLine, OBJ_INFO_TYPE) = OBJ_TYPE_POINT Then
+				If CartesianObjectLen(oNewLine, "m") < fShortestLength Then
+					fShortestLength 	= CartesianObjectLen(oNewLine, "m")
+					oShortestLine		= oNewLine
+				End If
+			End If
+			Fetch Next From __Extent_To
+		Loop
+
+		If fShortestLength < (fTolerance * 10) Then
+			fX		= ObjectNodeX(oShortestLine, 1, 2)
+			fY		= ObjectNodeY(oShortestLine, 1, 2)
+			nNode	= IIf(nFromStartOrEnd = 1, 1, ObjectInfo(oDrawnPline, OBJ_INFO_NPOLYGONS + 1))
+			Alter Object oDrawnPline
+				Node Set Position 1, nNode (fX, fY)
+		End If
+
+		Close Table __Extent_To
+	Next
+
+	Insert Into sTab (OBJ) Values (oDrawnPline)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTDrawAndExtendPolyline")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTDrawPointBuffer
+
+Dim	nWID, nCalculationMethod As Integer,
+	fStartX, fStartY, fEndX, fEndY, fDistance As Float,
+	sTab As String,
+	oPoint, oGeometry As Object
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+	sTab	= MAPGetEditLayerName(nWID)
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+	Set CoordSys Table sTab
+
+	fStartX	= CommandInfo(CMD_INFO_X)
+	fStartY	= CommandInfo(CMD_INFO_Y)
+	fEndX	= CommandInfo(CMD_INFO_X2)
+	fEndY	= CommandInfo(CMD_INFO_Y2)
+
+'	Note FormatNumber$(fStartX) & " | " & FormatNumber$(fStartY)
+
+	fDistance			= Round(CartesianDistance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+	nCalculationMethod	= CALC_METHOD_CARTESIAN
+
+'	Note FormatNumber$(fDirection) & " | " & FormatNumber$(fDistance)
+	If fDistance = -1 Then
+		fDistance			= Round(Distance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+		nCalculationMethod	= CALC_METHOD_SPHERICAL
+	End If
+
+'	If Not DLGPointBuffer(fStartX, fStartY, fDistance, -1, -1, -1) Then
+'		Exit Sub
+'	End If
+
+'	oPoint	= CreatePoint(DLGITGetX(), DLGITGetY())
+'	oGeometry = CartesianBuffer(oPoint, DLGPBGetRadius(), DLGPBGetResolution(), DLGPBGetCalculationMethod())
+	oPoint	= CreatePoint(fStartX, fStartY)
+	If nCalculationMethod = CALC_METHOD_CARTESIAN Then
+		oGeometry = CartesianBuffer(oPoint, 36, fDistance, "m")
+	Else
+		oGeometry = Buffer(oPoint, 36, fDistance, "m")
+	End If
+
+	Insert Into sTab (OBJ) Values (oGeometry)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTDrawPointBuffer")
 	Call ERRShow()
 
 End Sub

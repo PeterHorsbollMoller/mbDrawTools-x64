@@ -1,2 +1,5 @@
 13:25:52 Coordsys Projection Type: 8
 13:26:03 Update Cell_Towers Set OBJ = DTCreateAnnulusSector(CreatePoint(UTM_E, UTM_N) , DTNorth2MathAngle(Bearing), 500, 750, SpreadAngle, 36, 1)
+11:17:19 Whoops, extended line doesn't intersect line to extend to
+11:17:19 Whoops, extended line doesn't intersect line to extend to
+11:25:14 Whoops, extended line doesn't intersect line to extend to

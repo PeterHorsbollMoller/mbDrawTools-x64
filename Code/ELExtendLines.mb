@@ -1,0 +1,207 @@
+﻿'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Precisely
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\MAPPERLib.def"
+Include "Library\OBJLib.def"
+Include "Library\TABLELib.def"
+
+Include "ELExtendLines.def"
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub ELDrawAndExtendPolylineTool
+
+Dim	oDrawnPline, oSegment, oToPline, oNewLine, oShortestLine As Object,
+	fX, fY, fTolerance, fShortestLength As Float,
+	nWID, nNumPnts, nFromStartOrEnd, nNode As Integer,
+	sTab As String
+
+OnError GoTo ErrorOccured
+
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+	If Not WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Note "Please use this tool in a map window!"
+		Exit Sub
+	End If
+
+	sTab	= MAPGetEditLayerName(nWID)
+	If sTab = "" Then
+		Note "Please make sure that you have made a layer editable!"
+		Exit Sub
+	End If
+	Set CoordSys Table sTab
+
+	fTolerance	= 10	'meters
+
+	oDrawnPline	= CommandInfo(CMD_INFO_CUSTOM_OBJ)
+
+	For nFromStartOrEnd = 1 To 2
+		oNewLine	= OBJCreateLineExtension(oDrawnPline, IIf(nFromStartOrEnd = 1, OBJ_FIRST_SEGMENT, OBJ_LAST_SEGMENT), fTolerance, "m", CALC_METHOD_CARTESIAN)
+		Select * From sTab
+			Where OBJ Intersects oNewLine
+			Into __Extent_To NoSelect Hide
+
+'		Print nFromStartOrEnd & " Found " & TableInfo(__Extent_To, TAB_INFO_NROWS) & " records from tables ROADS"
+
+		fShortestLength	= fTolerance * 10
+		Fetch First From __Extent_To
+		Do Until EOT(__Extent_To)
+			oToPline	= __Extent_To.OBJ
+
+			oNewLine	= OBJCreateLineToIntersection(oDrawnPline, IIf(nFromStartOrEnd = 1, OBJ_FIRST_SEGMENT, OBJ_LAST_SEGMENT), oToPline, fTolerance, "m", CALC_METHOD_CARTESIAN)
+			If CartesianObjectLen(oNewLine, "m") < fShortestLength Then
+				If not ObjectInfo(oNewLine, OBJ_INFO_TYPE) = OBJ_TYPE_POINT Then
+					fShortestLength 	= CartesianObjectLen(oNewLine, "m")
+					oShortestLine		= oNewLine
+				End If
+			End If
+			Fetch Next From __Extent_To
+		Loop
+
+		If fShortestLength < (fTolerance * 10) Then
+			fX		= ObjectNodeX(oShortestLine, 1, 2)
+			fY		= ObjectNodeY(oShortestLine, 1, 2)
+			nNode	= IIf(nFromStartOrEnd = 1, 1, ObjectInfo(oDrawnPline, OBJ_INFO_NPOLYGONS + 1))
+			Alter Object oDrawnPline
+				Node Set Position 1, nNode (fX, fY)
+		End If
+
+		Close Table __Extent_To
+	Next
+
+	Insert Into sTab (OBJ) Values (oDrawnPline)
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "ELDrawAndExtendPolylineTool")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function ELCreateLineToIntersection( ByVal oFromPline As Object			'2-node polyline
+							, ByVal nFromStartOrEnd As Integer		'1 = Start Segment, 2 = End Segment
+							, ByVal oToPline As Object			'multi-point polyline
+							, ByVal fDistanceTolerance As Float	'Search distance
+							, ByVal sDistanceUnits As String		'Distance units
+							) As Object						'Returns a point at (0,0) if no intersection was found
+
+Dim	oNewLine, oIntersection As Object,
+	nPnts, nNumPnts As Integer,
+	fX, fY, fAngle As Float
+
+OnError GoTo ErrorOccured
+
+ELCreateLineToIntersection = CreatePoint(0,0)
+
+	oNewLine	= ELCreateLineExtension(oFromPline, nFromStartOrEnd, fDistanceTolerance, sDistanceUnits)
+
+	If Not oNewLine Intersects oToPline Then
+		Call DEBUGPrint("Whoops, extended line doesn't intersect line to extend to")
+		Exit Function
+	End If
+
+	oIntersection	= IntersectNodes(oNewLine, oToPline, INCL_CROSSINGS)
+	nNumPnts		= ObjectInfo(oIntersection, OBJ_INFO_NPNTS)
+
+	If nNumPnts = 0 Then
+		Call DEBUGPrint("Whoops, extended line doesn't intersect line to extend to")
+		Exit Function
+	End If
+
+	fX	= ObjectNodeX(oNewLine, 1, 1)
+	fY	= ObjectNodeY(oNewLine, 1, 1)
+	Create Pline
+		Into Variable oNewLine
+		1 (fX, fY)
+
+	For nPnts = 1 To nNumPnts
+		Alter Object oNewLine
+			Node Add Position 1, (nPnts + 1) (ObjectNodeX(oIntersection, 1, nPnts), ObjectNodeY(oIntersection, 1, nPnts))
+	Next
+
+	ELCreateLineToIntersection = oNewLine
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "ELCreateLineToIntersection")
+	Call ERRShow()
+
+End Function
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function ELCreateLineExtension( ByVal oFromPline As Object			'One-segment polyline
+						, ByVal nFromStartOrEnd As Integer		'1 = Start Segment, 2 = End Segment
+						, ByVal fLength As Float				'Length of Line Extension
+						, ByVal sDistanceUnits As String		'Distance units
+						) As Object						'Returns a point at (0,0) if the process fails
+
+Dim	oNewLine, oP1, oP2, oP3 As Object,
+	nNumPnts As Integer,
+	fX, fY, fAngle As Float
+
+OnError GoTo ErrorOccured
+
+ELCreateLineExtension = CreatePoint(0,0)
+
+	If nFromStartOrEnd = 1 Then	'Start Segment
+		oNewLine	= OBJReverse(ExtractNodes(oFromPline, 1, 1, 2, FALSE))
+	Else	'Assuming End Segment
+		nNumPnts	= ObjectInfo(oFromPline, OBJ_INFO_NPOLYGONS + 1)
+		oNewLine	= ExtractNodes(oFromPline, 1, nNumPnts - 1, nNumPnts, FALSE)
+	End If
+
+	fAngle	= OBJDirection(oNewLine)
+
+	fX		= ObjectNodeX(oNewLine, 1, 2)
+	fY		= ObjectNodeY(oNewLine, 1, 2)
+	oP2		= CreatePoint(fX, fY)
+
+	oP3		= CartesianOffset(oP2, fAngle, fLength, sDistanceUnits)
+
+	oNewLine	= OBJCreatePlineFromPoints(oP2, oP3)
+
+	ELCreateLineExtension = oNewLine
+
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "ELCreateLineExtension")
+	Call ERRShow()
+
+End Function
