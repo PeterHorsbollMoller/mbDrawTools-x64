@@ -1,0 +1,132 @@
+﻿'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Precisely
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\TABLELib.def"
+
+Include "DLGMultiOffsets.def"
+
+Dim	mnNumOffsets As Integer,
+	mfDistance, mfDirection As Float
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGMultiOffsets(	  ByVal nNumOffsets As Integer
+						, ByVal fDistance As Float
+						, ByVal fDirection As Float
+						, ByVal sDistanceUnits As String
+						) As Logical
+
+Dim	sNumOffsets, sDistance, sDirection As String
+
+DLGMultiOffsets = FALSE
+
+OnError GoTo ErrorOccured
+
+	Dialog
+		Title "Create Multiple Offsets"
+
+		Control StaticText	Position 5,5
+			Title "Number of Offsets"
+		Control EditText	Position 5,15		Width 100
+			Value FormatNumber$(nNumOffsets)
+			Into sNumOffsets
+
+		Control StaticText	Position 5,30
+			Title "Distance, " & sDistanceUnits
+		Control EditText	Position 5,40		Width 100
+			Value FormatNumber$(Round(fDistance, 0.01))
+			Into sDistance
+
+		Control StaticText	Position 5,55
+			Title "Direction"
+		Control EditText	Position 5,65		Width 100
+			Value FormatNumber$(Round(fDirection, 0.01))
+			Into sDirection
+
+		Control OKButton
+		Control CancelButton
+
+	If not CommandInfo(CMD_INFO_DLG_OK) Then
+		Exit Function
+	End If
+
+	mnNumOffsets	= DeformatNumber$(sNumOffsets)
+	mfDistance	= DeformatNumber$(sDistance)
+	mfDirection	= DeformatNumber$(sDirection)
+
+	If mnNumOffsets <= 0 Then
+		Note "Please specify a number of offsets bigger than 0"
+		Exit Function
+	ElseIf mfDistance <= 0 Then
+		Note "Please specify a distance bigger than 0"
+		Exit Function
+	End If
+
+	DLGMultiOffsets = TRUE
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "PleaseEnterNameOfFunctionHere")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGMOGetNumOffsets() As Integer
+
+OnError GoTo ErrorOccured
+
+	DLGMOGetNumOffsets = IIf(mnNumOffsets = 0, 1, mnNumOffsets)
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGMOGetNumOffsets")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGMOGetDistance() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGMOGetDistance = mfDistance
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGMOGetDistance")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGMOGetDirection() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGMOGetDirection = mfDirection
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGMOGetDirection")
+	Call ERRShow()
+
+End Function

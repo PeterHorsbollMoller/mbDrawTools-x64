@@ -34,17 +34,21 @@ Include "DrawTools.def"
 Include "DLGIsoscelesTrapez.def"
 Include "DLGArrow.def"
 Include "DLGCreateCell.def"
+Include "DLGPointBuffer.def"
 Include "DLGSetNodeCoordinate.def"
 Include "DLGUpdateZMValues.def"
 Include "DLGUpdateZMUsingNodes.def"
 Include "DLGOffsetXYZ.def"
+Include "DLGMultiOffsets.def"
+Include "DLGMultiParallels.def"
+
 'Include "ELExtendLines.def"
 
 Declare Sub DTUpdateZMUsingNodesObject_Single
 Declare Sub DTUpdateZMUsingNodesColumn_Single
 
 Dim	msIconsFile, msBaseTab As String,
-	mnRowIDBasePrev As Integer,
+	mnRowIDBasePrev, nMoveNodeCtrlIdx As Integer,
 	moBase As Object
 '**********************************************************************************************''
 'Created by Peter Horsbøll Møller, Pitney Bowes Business Insight
@@ -57,151 +61,151 @@ Sub DTAddToolsToButtonPad(ByVal nButtonPadID As Integer, ByVal sButtonPadName As
 
 OnError GoTo ErrorOccured
 
-	If nButtonPadID <> 0 Then
-		Alter ButtonPad ID nButtonPadID Add
-			Separator
-			ToolButton
-				Calling DTRegionAdd
-				Icon 17	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POLYGON
-				HelpMsg "Add extra region to selected region\nAdd to selected region"
-				ModifierKeys On
-			ToolButton
-				Calling DTRegionRemove
-				Icon 19	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POLYGON
-				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddNode
-				Icon 21	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddStartNode
-				Icon 23	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddEndNode
-				Icon 25	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTNodeSetCoordinate
-				Icon 25	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
-			PushButton
-				Calling DTPolylineremoveStartNode
-				Icon 27	File DTGetIconsFile()
-				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
-			PushButton
-				Calling DTPolylineRemoveEndNode
-				Icon 29	File DTGetIconsFile()
-				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
-			Separator
-			PushButton
-				Calling DTCombineIntoNew
-				Icon 31	File DTGetIconsFile()
-				HelpMsg "Combine selected objects into new object\nCombine selected into new"
-			ToolButton
-				Calling DTCreateGaps
-				Icon 33	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
-				ModifierKeys On
-	Else
-		Alter ButtonPad sButtonPadName Add
-			Separator
-			ToolButton
-				Calling DTRegionAdd
-				Icon 17	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POLYGON
-				HelpMsg "Add extra region to selected region\nAdd to selected region"
-				ModifierKeys On
-			ToolButton
-				Calling DTRegionRemove
-				Icon 19	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POLYGON
-				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddNode
-				Icon 21	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddStartNode
-				Icon 23	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTPolylineAddEndNode
-				Icon 25	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
-				ModifierKeys On
-			ToolButton
-				Calling DTNodeSetCoordinate
-				Icon 25	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
-			PushButton
-				Calling DTPolylineremoveStartNode
-				Icon 27	File DTGetIconsFile()
-				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
-			PushButton
-				Calling DTPolylineRemoveEndNode
-				Icon 29	File DTGetIconsFile()
-				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
-			Separator
-			PushButton
-				Calling DTCombineIntoNew
-				Icon 31	File DTGetIconsFile()
-				HelpMsg "Combine selected objects into new object\nCombine selected into new"
-			ToolButton
-				Calling DTCreateGaps
-				Icon 33	File DTGetIconsFile()
-				'Cursor nCorsor File FILE_DLL
-				Cursor MI_CURSOR_CROSSHAIR
-				DrawMode DM_CUSTOM_POINT
-				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
-				ModifierKeys On
-	End If
+'	If nButtonPadID <> 0 Then
+'		Alter ButtonPad ID nButtonPadID Add
+'			Separator
+'			ToolButton
+'				Calling DTRegionAdd
+'				Icon 17	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POLYGON
+'				HelpMsg "Add extra region to selected region\nAdd to selected region"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTRegionRemove
+'				Icon 19	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POLYGON
+'				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddNode
+'				Icon 21	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddStartNode
+'				Icon 23	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddEndNode
+'				Icon 25	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTNodeSetCoordinate
+'				Icon 25	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
+'			PushButton
+'				Calling DTPolylineremoveStartNode
+'				Icon 27	File DTGetIconsFile()
+'				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
+'			PushButton
+'				Calling DTPolylineRemoveEndNode
+'				Icon 29	File DTGetIconsFile()
+'				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
+'			Separator
+'			PushButton
+'				Calling DTCombineIntoNew
+'				Icon 31	File DTGetIconsFile()
+'				HelpMsg "Combine selected objects into new object\nCombine selected into new"
+'			ToolButton
+'				Calling DTCreateGaps
+'				Icon 33	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
+'				ModifierKeys On
+'	Else
+'		Alter ButtonPad sButtonPadName Add
+'			Separator
+'			ToolButton
+'				Calling DTRegionAdd
+'				Icon 17	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POLYGON
+'				HelpMsg "Add extra region to selected region\nAdd to selected region"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTRegionRemove
+'				Icon 19	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POLYGON
+'				HelpMsg "Remove drawn region from selected region\nRemove from selected region"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddNode
+'				Icon 21	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new point to selected polyline\nAdd point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddStartNode
+'				Icon 23	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new start point to selected polyline\nAdd start point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTPolylineAddEndNode
+'				Icon 25	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Add new end point to selected polyline\nAdd end point to selected polyline"
+'				ModifierKeys On
+'			ToolButton
+'				Calling DTNodeSetCoordinate
+'				Icon 25	File DTGetIconsFile()
+'				'Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Set coordinate for specific node\nSet Node Coordinate"
+'			PushButton
+'				Calling DTPolylineremoveStartNode
+'				Icon 27	File DTGetIconsFile()
+'				HelpMsg "Remove start point from selected polyline\nRemove start point from selected polyline"
+'			PushButton
+'				Calling DTPolylineRemoveEndNode
+'				Icon 29	File DTGetIconsFile()
+'				HelpMsg "Remove end point from selected polyline\nRemove end point from selected polyline"
+'			Separator
+'			PushButton
+'				Calling DTCombineIntoNew
+'				Icon 31	File DTGetIconsFile()
+'				HelpMsg "Combine selected objects into new object\nCombine selected into new"
+'			ToolButton
+'				Calling DTCreateGaps
+'				Icon 33	File DTGetIconsFile()
+'				Cursor nCorsor File FILE_DLL
+'				Cursor MI_CURSOR_CROSSHAIR
+'				DrawMode DM_CUSTOM_POINT
+'				HelpMsg "Insert Gaps into the editable layer where clicked\nAdd gaps to the editable layer"
+'				ModifierKeys On
+'	End If
 
-	Call DTToggleDrawTools
+'	Call DTToggleDrawTools
 
 	Exit Sub
 '-------------------------
@@ -227,6 +231,26 @@ OnError GoTo ErrorOccured
 
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_SPATIAL_EDIT_GRP
+	sSplitButtonName		= BTN_SPATIAL_BUFFER_SPLIT		'"SpatialBufferSplitButton"
+	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_BUFFER		'"SpatialBufferMenuGroup"
+
+	nCtrlIdx = RBNDropDButtonGroupAddControl("DTCreateParallels", "Create Parallels", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Create multiple parallels to selcted lines or regions.", "Select an object from a map window.")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, MI_IMG_SPA_PARALLELLINE_16, MI_IMG_SPA_PARALLELLINE_32)
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTMultiParallelsTool")
+	End If
+
+
+	sTabName				= TAB_SPATIAL
+	sGroupName			= TAB_SPATIAL_EDIT_GRP
 	sSplitButtonName		= BTN_SPATIAL_COMBINE_DROPDOWN	'"CombineDropDown"
 	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_COMBINE		'"CombineDropDownMenuGroup"
 
@@ -245,6 +269,20 @@ OnError GoTo ErrorOccured
 	sGroupName			= TAB_SPATIAL_EDIT_GRP
 	sSplitButtonName		= BTN_SPATIAL_TRANSFORM_SPLIT
 	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_TRANSFORM
+
+	nCtrlIdx = RBNSplitBtnGroupInsertControl("DTCreateOffsets", "Create Offset Copies", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName, 1)
+	If nCtrlIdx > 0 Then
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nCtrlIdx, PRGIGetApplicationName(), "Create offset copies of the selected object by specifying direction, distance and times.", "Select an object in a map")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nCtrlIdx, CONTROL_SIZE_LARGE, MI_IMG_SPA_OFFSETOBJECT_16, MI_IMG_SPA_OFFSETOBJECT_32)
+		'Set DrawMode
+		Call RBNControlSetDrawModeIdx(nCtrlIdx, DM_CUSTOM_LINE)
+		'Set Cursor
+		Call RBNControlSetMICursorIdx(nCtrlIdx, MI_CURSOR_CROSSHAIR, "")
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTMultiOffsetsTool")
+	End If
 
 	nCtrlIdx = RBNSplitButtonGroupAddControl("DTRegionAdd", "Add to Region", "", ControlType_ToolButton, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 	If nCtrlIdx > 0 Then
@@ -293,11 +331,22 @@ OnError GoTo ErrorOccured
 		Call RBNControlSetCustomMBXHandlerIdx(nCtrlIdx, "DTOffsetXYZSelection")
 	End If
 
-
 	sTabName				= TAB_SPATIAL
 	sGroupName			= TAB_SPATIAL_EDIT_GRP
 	sSplitButtonName		= BTN_SPATIAL_NODES_SPLIT
 	sSplitButtonGroupName	= MNU_DROPDOWN_GRP_NODES
+
+	nMoveNodeCtrlIdx = RBNSplitBtnGroupInsertControl("DTMoveNodesSameLayer", "Move Nodes", "", ControlType_Button, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName, 3)
+	If nCtrlIdx > 0 Then
+		Call RBNControlToggleIdx(nMoveNodeCtrlIdx, TRUE)
+		'Create & Set the button tooltip
+		Call RBNControlSetToolTipIdx(nMoveNodeCtrlIdx, PRGIGetApplicationName(), "Move duplicate nodex in same layer", "Make a Map Window aktive")
+		'Set the button icon
+		Call RBNControlSetIconsIdx(nMoveNodeCtrlIdx, CONTROL_SIZE_LARGE, MI_IMG_SPA_MOVEDUPNODES_16, MI_IMG_SPA_MOVEDUPNODES_32)
+		'Set Custom MapBasic Handle to the button
+		Call RBNControlSetCustomMBXHandlerIdx(nMoveNodeCtrlIdx, "DTMoveDuplicateNodesOnOff")
+		Call RBNControlSetLeftMarginIdx(nMoveNodeCtrlIdx, 0)
+	End If
 
 '	nCtrlIdx = RBNSplitButtonGroupAddControl("sepNodesSplitButton", "", "", ControlType_ContextMenuSeparator, sTabName, sGroupName, sSplitButtonName, sSplitButtonGroupName)
 
@@ -550,6 +599,15 @@ Dim	nWID As Integer
 
 OnError GoTo ErrorOccured
 
+	nWID = FrontWindow()
+	If nWID = 0 Then
+		Exit Sub
+	End If
+
+	If WindowInfo(nWID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Call RBNControlToggleIdx(nMoveNodeCtrlIdx, (MapperInfo(nWID, MAPPER_INFO_MOVE_DUPLICATE_NODES) = 1))
+	End If
+
 	Call DTToggleDrawTools
 	Exit Sub
 '-------------------------
@@ -608,10 +666,13 @@ OnError GoTo ErrorOccured
 
 	If NumTables() = 0 Then
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTMoveNodesSameLayer", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
@@ -625,16 +686,19 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateAnglePointAlong", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTCreateCells", FALSE)
-'		Print "A Disabling 'DTDrawAndExtendPolyline'"
+'		Call DEBUGPrint("A Disabling 'DTDrawAndExtendPolyline'")
 		Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 		Exit Sub
 	Else
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateParallels", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", TRUE)
+		Call RBNGroupEnableControls(  "", "", "DTMoveNodesSameLayer", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", TRUE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", TRUE)
@@ -655,11 +719,15 @@ OnError GoTo ErrorOccured
 	nWID		= FrontWindow()
 
 	If SelectionInfo(SEL_INFO_NROWS) = 0 Then
+		Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTExtractNodesSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
 	End If
 	If SelectionInfo(SEL_INFO_NROWS) <> 1 Then
+		Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
@@ -675,10 +743,13 @@ OnError GoTo ErrorOccured
 
 	If nWID = 0 Then
 		Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+		Call RBNGroupEnableControls(  "", "", "DTMoveNodesSameLayer", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
@@ -689,16 +760,19 @@ OnError GoTo ErrorOccured
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
-'		Print "B Disabling 'DTDrawAndExtendPolyline'"
+'		Call DEBUGPrint("B Disabling 'DTDrawAndExtendPolyline'")
 		Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
 		Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 	Else
 		If WindowInfo(nWID, WIN_INFO_TYPE) <> WIN_MAPPER Then
 			Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineAddEndNode", FALSE)
+			Call RBNGroupEnableControls(  "", "", "DTMoveNodesSameLayer", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTNodeSetCoordinate", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveStartNode", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTPolylineRemoveEndNode", FALSE)
@@ -709,13 +783,15 @@ OnError GoTo ErrorOccured
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
-'			Print "C Disabling 'DTDrawAndExtendPolyline'"
+'			Call DEBUGPrint("C Disabling 'DTDrawAndExtendPolyline'")
 			Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
 			Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 		Else
 			nEditLayerID	= MapperInfo(nWID, MAPPER_INFO_EDIT_LAYER)
 			If nEditLayerID < 1 Then
 				Call RBNGroupEnableControls(  "", "", "DTRegionAdd", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTCreateOffsets", FALSE)
+				Call RBNGroupEnableControls(  "", "", "DTCreateParallels", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTRegionRemove", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddNode", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTPolylineAddStartNode", FALSE)
@@ -730,7 +806,7 @@ OnError GoTo ErrorOccured
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMOnSelection", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTUpdateZMUsingNodesTable", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTOffsetXYZSelection", FALSE)
-'				Print "D Disabling 'DTDrawAndExtendPolyline'"
+'				Call DEBUGPrint("D Disabling 'DTDrawAndExtendPolyline'")
 				Call RBNGroupEnableControls(  "", "", "DTDrawAndExtendPolyline", FALSE)
 				Call RBNGroupEnableControls(  "", "", "DTDrawPointBuffer", FALSE)
 			Else
@@ -1525,8 +1601,8 @@ OnError GoTo ErrorOccured
 		Into Variable oBaseLine
 		2 (fXFrom, fYFrom) (fXTo, fYTo)
 
-	Print "Direction: " & fDirection
-	Print "Direction Perpedicular: " & fDirectionPerp1
+	Call DEBUGPrint("Direction: " & fDirection)
+	Call DEBUGPrint("Direction Perpedicular: " & fDirectionPerp1)
 
 	Fetch First From Selection
 	oPolygon	= Selection.OBJ
@@ -1548,7 +1624,7 @@ OnError GoTo ErrorOccured
 					, Distance(ObjectGeography(oPolygon, OBJ_GEO_MINX), ObjectGeography(oPolygon, OBJ_GEO_MINY), ObjectGeography(oPolygon, OBJ_GEO_MAXX), ObjectGeography(oPolygon, OBJ_GEO_MINY), "m")
 					) * 2
 
-	Print "Max Length: " & FormatNumber$(Round(fMaxLength, 0.01)) & " m"
+	Call DEBUGPrint("Max Length: " & FormatNumber$(Round(fMaxLength, 0.01)) & " m")
 
 	oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, 0)
 	oPoint2	= OBJCartesianCreatePointAlong(oBaseLine, fDistance * -1, 0)
@@ -1570,7 +1646,7 @@ OnError GoTo ErrorOccured
 	nSegment = 1
 '	For nSegment = 1 To ObjectInfo(oPolygon, OBJ_INFO_NPOLYGONS)
 		For nNode = 1 To ObjectInfo(oPolygon, OBJ_INFO_NPOLYGONS + nSegment)
-			Print "Node: " & FormatNumber$(nNode)
+			Call DEBUGPrint("Node: " & FormatNumber$(nNode))
 			oNode 		= CreatePoint(ObjectNodeX(oPolygon, nSegment, nNode), ObjectNodeY(oPolygon, nSegment, nNode))
 
 '			oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength)
@@ -1587,8 +1663,8 @@ OnError GoTo ErrorOccured
 
 			If oLine Intersects oPolygon Then
 				If CartesianObjectLen(Overlap(oLine, oPolygon), "m") > 0.0 Then
-				Print "  Length of perp line: " & FormatNumber$(Round(CartesianObjectLen(Overlap(oLine, oPolygon), "m"), 0.01))
-					Print "  Adding Line ..."
+				Call DEBUGPrint("  Length of perp line: " & FormatNumber$(Round(CartesianObjectLen(Overlap(oLine, oPolygon), "m"), 0.01)))
+					Call DEBUGPrint("  Adding Line ...")
 					oLine	= Overlap(oLine, oPolygon)
 					Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
 						(OBJ)
@@ -1608,7 +1684,7 @@ OnError GoTo ErrorOccured
 '	For nLine = 0 To ((Int(fMaxLength) + 1) * 2) Step 1
 '
 '		fDistance	= nLine * 1.00
-'		Print "Distance: " & FormatNumber$(Round(fDistance, 0.01)) & " m"
+'		Call DEBUGPrint("Distance: " & FormatNumber$(Round(fDistance, 0.01)) & " m")
 '		oPoint1	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength)
 '		oPoint2	= OBJCartesianCreatePointAlong(oBaseLine, fDistance, fMaxLength * -1)
 '
@@ -1618,7 +1694,7 @@ OnError GoTo ErrorOccured
 '			Pen MakePen(2, 2, BLUE)
 '
 '		If oLine Intersects oPolygon Then
-'			Print "Adding Line ..."
+'			Call DEBUGPrint("Adding Line ...")
 ''			Insert Into WindowInfo(nWID, WIN_INFO_TABLE)
 ''				(OBJ)
 ''				Values (oLine)
@@ -1774,12 +1850,12 @@ OnError GoTo ErrorOccured
 					fAnglePrev	= MATHGetDirection(tCur.fX, tCur.fY, tPrev.fX, tPrev.fY)
 					fAngleNext	= MATHGetDirection(tCur.fX, tCur.fY, tNext.fX, tNext.fY)
 
-'					Print "Node: " & nNode & ": Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
+'					Call DEBUGPrint("Node: " & nNode & ": Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext))
 
 					fAngle		= Maximum(fAnglePrev, fAngleNext) - Minimum(fAnglePrev, fAngleNext)
 					fAngle		= Minimum(fAngle, (360 - fAngle))
 
-'					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
+'					Call DEBUGPrint("Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY)
 
 					Insert Into sNodesTab
 						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
@@ -1803,12 +1879,12 @@ OnError GoTo ErrorOccured
 					fAnglePrev	= MATHGetDirection(tCur.fX, tCur.fY, tPrev.fX, tPrev.fY)
 					fAngleNext	= MATHGetDirection(tCur.fX, tCur.fY, tNext.fX, tNext.fY)
 
-'					Print "Node: 1: Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext)
+'					Call DEBUGPrint("Node: 1: Angle 1: " & FormatNumber$(fAnglePrev) & " - Angle 2: " & FormatNumber$(fAngleNext))
 
 					fAngle		= Maximum(fAnglePrev, fAngleNext) - Minimum(fAnglePrev, fAngleNext)
 					fAngle		= Minimum(fAngle, (360 - fAngle))
 
-'					Print "Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY
+'					Call DEBUGPrint("Angle: " & FormatNumber$(fAngle) & " at " & tCur.fX & " | " & tCur.fY)
 
 					Insert Into sNodesTab
 						(TABLE_NAME, RECORD_NO, NODE_NO, MINIMUM_ANGLE, OBJ)
@@ -2452,7 +2528,7 @@ Sub DTDrawAndExtendPolyline
 Dim	oDrawnPline, oSegment, oToPline, oNewLine, oShortestLine As Object,
 	fX, fY, fTolerance, fShortestLength As Float,
 	nWID, nNumPnts, nFromStartOrEnd, nNode As Integer,
-	sTab As String
+	sEditTable As String
 
 OnError GoTo ErrorOccured
 
@@ -2466,12 +2542,12 @@ OnError GoTo ErrorOccured
 		Exit Sub
 	End If
 
-	sTab	= MAPGetEditLayerName(nWID)
-	If sTab = "" Then
+	sEditTable	= MAPGetEditLayerName(nWID)
+	If sEditTable = "" Then
 		Note "Please make sure that you have made a layer editable!"
 		Exit Sub
 	End If
-	Set CoordSys Table sTab
+	Set CoordSys Table sEditTable
 
 	fTolerance	= 10	'meters
 
@@ -2479,11 +2555,11 @@ OnError GoTo ErrorOccured
 
 	For nFromStartOrEnd = 1 To 2
 		oNewLine	= OBJCreateLineExtension(oDrawnPline, IIf(nFromStartOrEnd = 1, OBJ_FIRST_SEGMENT, OBJ_LAST_SEGMENT), fTolerance, "m", CALC_METHOD_CARTESIAN)
-		Select * From sTab
+		Select * From sEditTable
 			Where OBJ Intersects oNewLine
 			Into __Extent_To NoSelect Hide
 
-'		Print nFromStartOrEnd & " Found " & TableInfo(__Extent_To, TAB_INFO_NROWS) & " records from tables ROADS"
+'		Call DEBUGPrint(nFromStartOrEnd & " Found " & TableInfo(__Extent_To, TAB_INFO_NROWS) & " records from tables ROADS")
 
 		fShortestLength	= fTolerance * 10
 		Fetch First From __Extent_To
@@ -2511,7 +2587,7 @@ OnError GoTo ErrorOccured
 		Close Table __Extent_To
 	Next
 
-	Insert Into sTab (OBJ) Values (oDrawnPline)
+	Insert Into sEditTable (OBJ) Values (oDrawnPline)
 
 	Exit Sub
 '-------------------------
@@ -2530,7 +2606,7 @@ Sub DTDrawPointBuffer
 
 Dim	nWID, nCalculationMethod As Integer,
 	fStartX, fStartY, fEndX, fEndY, fDistance As Float,
-	sTab As String,
+	sEditTable, sDistanceUnits, sCoordSysName As String,
 	oPoint, oGeometry As Object
 
 OnError GoTo ErrorOccured
@@ -2545,12 +2621,14 @@ OnError GoTo ErrorOccured
 		Exit Sub
 	End If
 
-	sTab	= MAPGetEditLayerName(nWID)
-	If sTab = "" Then
+	sEditTable	= MAPGetEditLayerName(nWID)
+	If sEditTable = "" Then
 		Note "Please make sure that you have made a layer editable!"
 		Exit Sub
 	End If
-	Set CoordSys Table sTab
+	Set CoordSys Table sEditTable
+	sCoordSysName	= TableInfo(sEditTable, TAB_INFO_COORDSYS_NAME)
+	sDistanceUnits = MapperInfo(nWID, MAPPER_INFO_DISTUNITS)
 
 	fStartX	= CommandInfo(CMD_INFO_X)
 	fStartY	= CommandInfo(CMD_INFO_Y)
@@ -2559,29 +2637,29 @@ OnError GoTo ErrorOccured
 
 '	Note FormatNumber$(fStartX) & " | " & FormatNumber$(fStartY)
 
-	fDistance			= Round(CartesianDistance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+	fDistance			= Round(CartesianDistance(fStartX, fStartY, fEndX, fEndY, sDistanceUnits), 0.001)
 	nCalculationMethod	= CALC_METHOD_CARTESIAN
 
 '	Note FormatNumber$(fDirection) & " | " & FormatNumber$(fDistance)
 	If fDistance = -1 Then
-		fDistance			= Round(Distance(fStartX, fStartY, fEndX, fEndY, "m"), 0.001)
+		fDistance			= Round(Distance(fStartX, fStartY, fEndX, fEndY, sDistanceUnits), 0.001)
 		nCalculationMethod	= CALC_METHOD_SPHERICAL
 	End If
 
-'	If Not DLGPointBuffer(fStartX, fStartY, fDistance, -1, -1, -1) Then
-'		Exit Sub
-'	End If
-
-'	oPoint	= CreatePoint(DLGITGetX(), DLGITGetY())
-'	oGeometry = CartesianBuffer(oPoint, DLGPBGetRadius(), DLGPBGetResolution(), DLGPBGetCalculationMethod())
-	oPoint	= CreatePoint(fStartX, fStartY)
-	If nCalculationMethod = CALC_METHOD_CARTESIAN Then
-		oGeometry = CartesianBuffer(oPoint, 36, fDistance, "m")
-	Else
-		oGeometry = Buffer(oPoint, 36, fDistance, "m")
+	If Not DLGPointBuffer(fStartX, fStartY, fDistance, sDistanceUnits, nCalculationMethod, sCoordSysName) Then
+		Exit Sub
 	End If
 
-	Insert Into sTab (OBJ) Values (oGeometry)
+	oPoint	= CreatePoint(DLGPBGetX(), DLGPBGetY())
+'	oGeometry = CartesianBuffer(oPoint, DLGPBGetRadius(), DLGPBGetResolution(), nCalculationMethod)
+'	oPoint	= CreatePoint(fStartX, fStartY)
+	If nCalculationMethod = CALC_METHOD_CARTESIAN Then
+		oGeometry = CartesianBuffer(oPoint, 36, DLGPBGetRadius(), sDistanceUnits)
+	Else
+		oGeometry = Buffer(oPoint, 36, DLGPBGetRadius(), sDistanceUnits)
+	End If
+
+	Insert Into sEditTable (OBJ) Values (oGeometry)
 
 	Exit Sub
 '-------------------------
@@ -2591,3 +2669,247 @@ ErrorOccured:
 
 End Sub
 
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTMultiParallelsTool
+
+Dim	oNew, oOld As Object,
+	aObj As Alias,
+	sQuery, sBaseTable, sEditTable, sDistanceUnits As String,
+	i, nMID, nCalcMethod As Integer,
+	fX1, fY1, fX2, fY2, fDistance, fDirection As Float
+
+OnError GoTo ErrorOccured
+
+	sQuery	= SelectionInfo(SEL_INFO_SELNAME)
+	Do Case SelectionInfo(SEL_INFO_NROWS)
+		Case 0
+			'Do nothing
+			Note "Please select one record to create parallels for"
+		Case 1
+			sBaseTable	= SelectionInfo(SEL_INFO_TABLENAME)
+
+			'Using the coordsys of the map window
+			nMID = FrontWindow()
+			Set CoordSys Window nMID
+
+			sEditTable	= MAPGetEditLayerName(nMID)
+			If sEditTable = "" Then
+				Note "Please make sure that you have made a layer editable!"
+				Exit Sub
+			End If
+
+			If MapperInfo(nMID, MAPPER_INFO_XYUNITS) = "degree" Then
+				nCalcMethod = CALC_METHOD_SPHERICAL
+			Else
+				nCalcMethod = CALC_METHOD_CARTESIAN
+			End If
+			sDistanceUnits = MapperInfo(nMID, MAPPER_INFO_DISTUNITS)
+
+			'**Get fX1, fY1, fX2, fY2 using the CommandInfo
+			fX1	= CommandInfo(CMD_INFO_X)
+			fY1	= CommandInfo(CMD_INFO_Y)
+			fX2	= CommandInfo(CMD_INFO_X2)
+			fY2	= CommandInfo(CMD_INFO_Y2)
+
+			'**Calculate distance and directionn using the coordinates
+			If nCalcMethod = CALC_METHOD_SPHERICAL Then
+				fDistance		= SphericalDistance(fX1, fY1, fX2, fY2, sDistanceUnits)
+	'			fDirection	= MATHGetDirection(fX1, fY1, fX2, fY2)
+			Else
+				fDistance		= CartesianDistance(fX1, fY1, fX2, fY2, sDistanceUnits)
+	'			fDirection	= MATHGetDirection(fX1, fY1, fX2, fY2)
+			End If
+			Call DEBUGPrint("Calculated Distance: " & FormatNumber$(Round(fDistance, 0.01)) & " Orientation: " & DLGMPGetOrientation())
+
+			If DLGMultiParallels(DLGMPGetNumParallels(), fDistance, DLGMPGetOrientation(), sDistanceUnits) Then
+				Call DEBUGPrint("Dialog GetNumParallels: Number: " & DLGMPGetNumParallels() & " Distance: " & FormatNumber$(Round(DLGMPGetDistance(), 0.01)) & " Orientation: " & DLGMPGetOrientation())
+
+				aObj = sQuery & ".OBJ"
+				Fetch First From sQuery
+				oOld = aObj
+
+				For i = 1 To DLGMPGetNumParallels()
+					oNew = Exec("MapCAD.mbx","CreateParallel", oOld, DLGMPGetDistance(), DLGMPGetOrientation(), FALSE, FALSE)
+					Insert Into sEditTable
+						(OBJ) Values (oNew)
+					oOld = oNew
+				Next
+				Close Table sQuery
+			End If
+
+		Case Else
+			Close Table sQuery
+			Note "Please select just one record to create parallels for"
+	End Case
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTMultiParallelsTool")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTMultiOffsetsTool
+
+Dim	oNew, oOld As Object,
+	aObj As Alias,
+	sQuery, sBaseTable, sEditTable, sDistanceUnits As String,
+	i, nMID, nCalcMethod As Integer,
+	fX1, fY1, fX2, fY2, fDistance, fDirection As Float
+
+OnError GoTo ErrorOccured
+
+	sQuery	= SelectionInfo(SEL_INFO_SELNAME)
+	Do Case SelectionInfo(SEL_INFO_NROWS)
+		Case 0
+			'Do nothing
+			Note "Please select one record to create parallels for"
+		Case 1
+			sBaseTable	= SelectionInfo(SEL_INFO_TABLENAME)
+			'Using the coordsys of the map window
+			nMID = FrontWindow()
+			Set CoordSys Window nMID
+
+			sEditTable	= MAPGetEditLayerName(nMID)
+			If sEditTable = "" Then
+				Note "Please make sure that you have made a layer editable!"
+				Exit Sub
+			End If
+
+			If MapperInfo(nMID, MAPPER_INFO_XYUNITS) = "degree" Then
+				nCalcMethod = CALC_METHOD_SPHERICAL
+			Else
+				nCalcMethod = CALC_METHOD_CARTESIAN
+			End If
+			sDistanceUnits = MapperInfo(nMID, MAPPER_INFO_DISTUNITS)
+
+			'**Get fX1, fY1, fX2, fY2 using the CommandInfo
+			fX1	= CommandInfo(CMD_INFO_X)
+			fY1	= CommandInfo(CMD_INFO_Y)
+			fX2	= CommandInfo(CMD_INFO_X2)
+			fY2	= CommandInfo(CMD_INFO_Y2)
+
+			'**Calculate distance and directionn using the coordinates
+			If nCalcMethod = CALC_METHOD_SPHERICAL Then
+				fDistance		= SphericalDistance(fX1, fY1, fX2, fY2, sDistanceUnits)
+				fDirection	= MATHGetDirection(fX1, fY1, fX2, fY2)
+			Else
+				fDistance		= CartesianDistance(fX1, fY1, fX2, fY2, sDistanceUnits)
+				fDirection	= MATHGetDirection(fX1, fY1, fX2, fY2)
+			End If
+			Call DEBUGPrint("Calculated Distance: " & FormatNumber$(Round(fDistance, 0.01)) & " Direction: " & FormatNumber$(Round(fDirection, 0.01)))
+
+			If DLGMultiOffsets(DLGMOGetNumOffsets(), fDistance, fDirection, sDistanceUnits) Then
+				Call DEBUGPrint("Dialog DLGMultiOffsets: Number: " & DLGMOGetNumOffsets() & " Distance: " & FormatNumber$(Round(DLGMOGetDistance(), 0.01)) & " Direction: " & DLGMOGetDirection())
+
+				aObj = sQuery & ".OBJ"
+				Fetch First From sQuery
+				oOld = aObj
+
+				For i = 1 To DLGMOGetNumOffsets()
+					If nCalcMethod = CALC_METHOD_SPHERICAL Then
+						oNew = SphericalOffset(oOld, DLGMOGetDirection(), DLGMOGetDistance(), sDistanceUnits)
+					Else
+						oNew = CartesianOffset(oOld, DLGMOGetDirection(), DLGMOGetDistance(), sDistanceUnits)
+					End If
+
+					Insert Into sEditTable
+						(OBJ) Values (oNew)
+
+					oOld = oNew
+				Next
+			End If
+			Close Table sQuery
+		Case Else
+			Close Table sQuery
+			Note "Please select just one record to create parallels for"
+	End Case
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTMultiParallelsTool")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTMoveDuplicateNodesOnOff
+
+Dim	nMID As Integer
+
+OnError GoTo ErrorOccured
+
+	nMID = FrontWindow()
+	If nMID = 0 Then
+		Exit Sub
+	End If
+
+	If Not WindowInfo(nMID, WIN_INFO_TYPE) = WIN_MAPPER Then
+		Exit Sub
+	End If
+
+	Set Map
+		Window nMID
+		'Move Nodes { value | Default } ]
+		Move Nodes IIf(MapperInfo(nMID, MAPPER_INFO_MOVE_DUPLICATE_NODES) = 1, 0, 1)
+	Call RBNControlToggleIdx(nMoveNodeCtrlIdx, (MapperInfo(nMID, MAPPER_INFO_MOVE_DUPLICATE_NODES) = 1))
+
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTMoveDuplicateNodesOnOff")
+	Call ERRShow()
+
+End Sub
+
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTSetCoordsysUsingTable(ByVal sTable As String)
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Table sTable
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTSetCoordsysUsingTable")
+	Call ERRShow()
+
+End Sub
+
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Pitney Bowes
+'Parameters:
+'
+'**********************************************************************************************''
+Sub DTSetCoordsysUsingMap(ByVal nMID As Integer)
+
+OnError GoTo ErrorOccured
+
+	Set CoordSys Window nMID
+	Exit Sub
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DTSetCoordsysUsingMap")
+	Call ERRShow()
+
+End Sub

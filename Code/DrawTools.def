@@ -33,3 +33,11 @@ Declare Sub DTCreateCells
 
 Declare Sub DTDrawAndExtendPolyline
 Declare Sub DTDrawPointBuffer
+
+Declare Sub DTMultiParallelsTool
+Declare Sub DTMultiOffsetsTool
+
+Declare Sub DTMoveDuplicateNodesOnOff
+
+Declare Sub DTSetCoordsysUsingTable(ByVal sTable As String)
+Declare Sub DTSetCoordsysUsingMap(ByVal nMID As Integer)

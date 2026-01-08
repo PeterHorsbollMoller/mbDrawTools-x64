@@ -46,15 +46,23 @@
 '	17-04-2024 14:32:43	3.1.1	Added tool that will extend drawn line to intersection with objects in the editable layer
 '	19-04-2024 07:40:27	3.1.2	Moved functions for extending polyline to intersection to OBJLib
 '	22-04-2024 10:05:08 3.1.3	Initial Create Point Buffer tool
+'	15-05-2025 07:56:31 3.1.4	Registered Procedures to set CoordSys in DrawTools from MapInfo Pro
+'	05-12-2025 13:45:26 3.1.5	Added Create Parallels
+'							Added Create Offset Copies
+'	12-12-2025 14:42:28 3.1.6	Added Control to enable/disable Move Nodes in Same Layer
+'							Placed Create Offset Copies after Offset
+'	22-12-2025 11:10:17			Published the OBJBearing as DTLineBearing
+'	06-01-2026 15:29:46	3.1.7	Added dialog for Point Buffer tool
+'	08-01-2026 14:44:15 3.2.0	Published version
 '*******************************************************************************
-'	Add a new Node before/after current node ( on the line mid between the two nodes) in Set Node Coordinates dialog
-'	Create an arrow from a simple line or two points where the arrow goes into a "spline" to the left or right side
-'	Tool to remove spikes from polylines/polygons, see https://ideas.precisely.com/ideas/MIPRO-I-1265
-'	Ensure DTExtractNodesSelection only works on objects with nodes
-'	Add AnnulusSector Tool
-'	Add CircularSector Tool
-'	Add Point Buffer Tool
-'	Add Dougnut Tool
+'	- Add a new Node before/after current node ( on the line mid between the two nodes) in Set Node Coordinates dialog
+'	- Create an arrow from a simple line or two points where the arrow goes into a "spline" to the left or right side
+'	- Tool to remove spikes from polylines/polygons, see https://ideas.precisely.com/ideas/MIPRO-I-1265
+'	- Ensure DTExtractNodesSelection only works on objects with nodes
+'	- Add AnnulusSector Tool
+'	- Add CircularSector Tool
+'	- Add Dougnut Tool
+'	- Add Direction/Bearing tool that draw a direction/bearing wheel in the map with direction at 5/10/15/30/45/90 degrees - use dedicated temp table with columns for directions
 '*******************************************************************************
 
 '-------------------------------------
@@ -66,8 +74,8 @@ Include "Library\Defaults.def"
 
 Define xProgram 		"DrawTools"
 Define xProgramMenu		"DrawTools"
-Define xVersion 		"3.1.3"
-Define xYear			"2024"
+Define xVersion 		"3.2.0"
+Define xYear			"2026"
 Define xAddToMenuBar	FALSE
 
 Define FILE_INI			GetFolderPath$(FOLDER_MI_PREFERENCE) & xProgram & ".ini"
@@ -126,7 +134,12 @@ OnError GoTo ErrorOccured
 		Call DTAddToolsToRibbon
 	End If
 
-	nResult = RBNRegisterFunctionAsPublic("OBJDirection", "DTLineDirection", "Calculates the direction of a polyline, East is zero, counter-clockwise")
+	'**specific functions
+	nResult = RBNRegisterFunctionAsPublic("DTSetCoordsysUsingTable", "DTSetCoordsysUsingTable", "Set the coordinatesystem to use in DrawTools using a table." & lf & "Function published from the " & xProgram & " application.")
+	nResult = RBNRegisterFunctionAsPublic("DTSetCoordsysUsingMap", "DTSetCoordsysUsingMap", "Set the coordinatesystem to use in DrawTools using a map window." & lf & "Function published from the " & xProgram & " application.")
+
+	nResult = RBNRegisterFunctionAsPublic("OBJDirection", "DTLineDirection", "Calculates the direction of a (poly)line, East is zero, counter-clockwise")
+	nResult = RBNRegisterFunctionAsPublic("OBJBearing", "DTLineBearing", "Calculates the direction of a (poly)line, North is zero, clockwise")
 	nResult = RBNRegisterFunctionAsPublic("OBJCreateTrapez", "DTCreateTrapez", "Creates a trapez using a starting point, direction, length, width at start and end, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
 	nResult = RBNRegisterFunctionAsPublic("OBJCreateTriangle", "DTCreateTriangle", "Creates a triangle using a starting point, direction, length, width, optional midpoint creation and calculation method (1=Cart, 2=Spher)")
 	nResult = RBNRegisterFunctionAsPublic("OBJRemoveDuplicateNodes", "DTRemoveDuplicateNodes", "Removed duplicate nodes from input object using the given tolerance in meters")

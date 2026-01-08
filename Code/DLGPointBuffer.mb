@@ -1,0 +1,162 @@
+﻿'*******************************************************************************
+'** 	Created By Peter Horsbøll Møller, Precisely
+'** 	Program:
+'** 	Modul:
+'**
+'*******************************************************************************
+
+'-------------------------------------
+Include "MapBasic.def"
+Include "Icons.def"
+Include "Menu.def"
+'**default constants...
+Include "Library\Defaults.def"
+
+'-------------------------------------
+Include "Library\DEBUGLib.def"
+Include "Library\ERRORLib.def"
+Include "Library\OBJLib.def"
+Include "Library\TABLELib.def"
+
+Include "DLGPointBuffer.def"
+
+Dim	mfX, mfY, mfDistance As Float,
+	mnResolution As Integer
+'**********************************************************************************************''
+'Created by Peter Horsbøll Møller, Precisely
+'Parameters:
+'	:
+'Return value:
+'
+'**********************************************************************************************''
+Function DLGPointBuffer(	  ByVal fX As Float
+					, ByVal fY As Float
+					, ByVal fDistance As Float
+					, ByVal sDistanceUnits As String
+					, ByVal nCalculationMethod As Integer
+					, ByVal sCoordSysName As String
+					) As Logical
+
+Dim	sDistance, sX, sY  As String,
+	fRounding As Float
+
+DLGPointBuffer = FALSE
+
+OnError GoTo ErrorOccured
+
+	fRounding = IIf(nCalculationMethod = CALC_METHOD_CARTESIAN, 0.001, 0.00001)
+
+	Dialog
+		Title "Create Point Buffer"
+
+		Control StaticText		Position 5,5
+			Title IIf(nCalculationMethod = CALC_METHOD_CARTESIAN, "X", "Longitude")
+		Control EditText		Position 5,15		Width 80
+			Value FormatNumber$(Round(fX, fRounding))
+			Into sX
+		Control StaticText		Position 90,5
+			Title IIf(nCalculationMethod = CALC_METHOD_CARTESIAN, "Y", "Latitude")
+		Control EditText		Position 90,15		Width 80
+			Value FormatNumber$(Round(fY, fRounding))
+			Into sY
+
+		Control StaticText		Position 5,35
+			Title "Coordsys"
+		Control EditText		Position 5,45		Width 170
+			Value sCoordSysName
+			Disable
+
+		Control StaticText		Position 5,65
+			Title "Calculation Method"
+		Control RadioGroup		Position 5,75		Width 80
+			Title "Cartesian;Spherical"
+			Value nCalculationMethod
+			Disable
+
+		Control StaticText		Position 90,65
+			Title "Distance, " & sDistanceUnits
+		Control EditText		Position 90,75		Width 80
+			Value FormatNumber$(Round(fDistance, 0.01))
+			Into sDistance
+
+		Control OKButton		Position 95,105	Width 35
+		Control CancelButton	Position 135,105	Width 35
+
+	If not CommandInfo(CMD_INFO_DLG_OK) Then
+		Exit Function
+	End If
+
+	mfX			= DeformatNumber$(sX)
+	mfY			= DeformatNumber$(sY)
+	mfDistance	= DeformatNumber$(sDistance)
+
+	If mfDistance <= 0 Then
+		Note "Please specify a distance bigger than 0"
+		Exit Function
+	End If
+
+	DLGPointBuffer = TRUE
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGPointBuffer")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGPBGetX() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGPBGetX = mfX
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGPBGetX")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGPBGetY() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGPBGetY = mfY
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGPBGetY")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGPBGetRadius() As Float
+
+OnError GoTo ErrorOccured
+
+	DLGPBGetRadius = mfDistance
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGPBGetRadius")
+	Call ERRShow()
+
+End Function
+
+'************************************************************************
+Function DLGPBGetResolution() As Integer
+
+OnError GoTo ErrorOccured
+
+	mnResolution = IIf(mnResolution = 0, 72, mnResolution)
+	DLGPBGetResolution = mnResolution
+	Exit Function
+'-------------------------
+ErrorOccured:
+	Call ERRCreate(Err(), Error$(), "DLGPBGetResolution")
+	Call ERRShow()
+
+End Function

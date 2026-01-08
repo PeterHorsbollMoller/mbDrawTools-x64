@@ -1,5 +1,13 @@
-13:25:52 Coordsys Projection Type: 8
-13:26:03 Update Cell_Towers Set OBJ = DTCreateAnnulusSector(CreatePoint(UTM_E, UTM_N) , DTNorth2MathAngle(Bearing), 500, 750, SpreadAngle, 36, 1)
-11:17:19 Whoops, extended line doesn't intersect line to extend to
-11:17:19 Whoops, extended line doesn't intersect line to extend to
-11:25:14 Whoops, extended line doesn't intersect line to extend to
+15:38:54  Check Coordinates: (550.803,07 | 6.304.990,33) -> (550.772,13 | 6.304.992,17)
+15:38:54  Check Coordinates: (550.803,07 | 6.304.990,33) -> (550.772,13 | 6.304.992,17)
+16:11:26  Check Coordinates: (550.788,1 | 6.304.994,79) -> (550.800,61 | 6.304.987,01)
+16:11:26  Check Coordinates: (550.788,1 | 6.304.994,79) -> (550.800,61 | 6.304.987,01)
+16:11:26  Check Coordinates: (550.776,95 | 6.304.993,27) -> (550.770,1 | 6.304.986,17)
+16:11:26  Check Coordinates: (550.776,95 | 6.304.993,27) -> (550.770,1 | 6.304.986,17)
+16:12:54  Check Coordinates: (550.768,82 | 6.304.984,9) -> (550.769,18 | 6.304.991,16)
+16:12:54 Calculated Distance: 6,27 Direction: 86,76
+16:13:46 Dialog DLGMultiOffsets: Number: 6 Distance: 6,27 Direction: 86.76
+16:15:35 Calculated Distance: 6,66 Orientation: 1
+16:15:51 Dialog GetNumParallels: Number: 6 Distance: 6,66 Orientation: 1
+16:17:45 Calculated Distance: 4,37 Orientation: 1
+16:18:46 Dialog GetNumParallels: Number: 6 Distance: 6,27 Orientation: 2

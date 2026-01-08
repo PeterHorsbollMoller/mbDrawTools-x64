@@ -1,0 +1,12 @@
+﻿Declare Function DLGPointBuffer(	  ByVal fX As Float
+							, ByVal fY As Float
+							, ByVal fDistance As Float
+							, ByVal sDistanceUnits As String
+							, ByVal nCalculationMethod As Integer
+							, ByVal sCoordSysName As String
+							) As Logical
+
+Declare Function DLGPBGetX() As Float
+Declare Function DLGPBGetY() As Float
+Declare Function DLGPBGetRadius() As Float
+Declare Function DLGPBGetResolution() As Integer

@@ -1,0 +1,9 @@
+﻿Declare Function DLGMultiOffsets(	  ByVal nNumOffsets As Integer
+							, ByVal fDistance As Float
+							, ByVal fDirection As Float
+							, ByVal sDistanceUnits As String
+							) As Logical
+
+Declare Function DLGMOGetNumOffsets() As Integer
+Declare Function DLGMOGetDistance() As Float
+Declare Function DLGMOGetDirection() As Float

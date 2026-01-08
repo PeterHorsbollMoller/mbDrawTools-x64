@@ -1,0 +1,10 @@
+﻿Declare Function DLGMultiParallels(  ByVal nNumParallels As Integer
+							, ByVal fDistance As Float
+'							, ByVal fDirection As Float
+							, ByVal nOrientation As Integer
+							, ByVal sDistanceUnits As String
+							) As Logical
+
+Declare Function DLGMPGetNumParallels() As Integer
+Declare Function DLGMPGetDistance() As Float
+Declare Function DLGMPGetOrientation() As Integer
